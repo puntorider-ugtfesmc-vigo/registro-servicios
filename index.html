@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Servicios v7.3 - Auditoría de Tiempos</title>
+    <title>Auditor de Tiempos v8.0 - Estabilizado</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --warning: #f39c12; --info: #3498db; --secondary: #95a5a6; --danger-soft: #e74c3c; --light-bg: #f0f2f5; --white: #ffffff; }
@@ -29,60 +29,96 @@
         .card-entrega:active { background: #f1f2f6; transform: translateX(5px); }
         .check-pill { background: #f1f2f6; padding: 16px; border-radius: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; font-weight: 700; cursor: pointer; }
         .name-input-group { background: #f1f9ff; padding: 20px; border-radius: 18px; margin-bottom: 25px; border-left: 6px solid var(--info); }
+        
+        /* Botonera de pedidos */
+        .order-selector { display: flex; gap: 8px; margin-bottom: 20px; }
+        .order-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #eee; background: #f8f9fa; font-weight: 800; font-size: 1.2rem; transition: 0.2s; }
+        .order-btn.active { background: var(--info); color: white; border-color: var(--info); transform: scale(1.05); }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div id="undo-wrapper" class="hidden"><button onclick="deshacer()" class="btn-undo">↺ DESHACER ÚLTIMO PASO</button></div>
+        
         <div id="p_pre" class="text-center flex-grow-1 d-flex flex-column justify-content-center">
             <div class="mb-4"><img src="https://cdn-icons-png.flaticon.com/512/711/711192.png" width="120" style="opacity: 0.7"></div>
             <h1 class="display-5 fw-bold mb-3">Registro de Servicios</h1>
             <div class="px-3"><button onclick="iniciarJornada()" class="btn btn-massive btn-primary shadow-lg">Iniciar Turno</button></div>
         </div>
+
         <div id="p0" class="hidden">
             <h2 class="text-center fw-bold mb-4">Ajuste de Inicio</h2>
             <div class="card p-4 border-0 shadow-sm rounded-4">
-                <div class="form-check form-switch mb-4"><input class="form-check-input" type="checkbox" id="usarKM" checked onchange="document.getElementById('kmI').disabled = !this.checked"><label class="form-check-label fw-bold fs-5">Registrar Kilometraje</label></div>
-                <div class="mb-4"><label class="small text-muted fw-bold mb-2 text-uppercase">Lectura del Cuentakilómetros:</label><input type="number" id="kmI" class="form-control form-control-lg py-3" value="0" style="font-size: 1.5rem; font-weight: 700;"></div>
+                <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" id="usarKM" checked onchange="document.getElementById('kmI').disabled = !this.checked">
+                    <label class="form-check-label fw-bold fs-5">Registrar Kilometraje</label>
+                </div>
+                <div class="mb-4">
+                    <label class="small text-muted fw-bold mb-2 text-uppercase">Lectura del Cuentakilómetros:</label>
+                    <input type="number" id="kmI" class="form-control form-control-lg py-3" value="0" style="font-size: 1.5rem; font-weight: 700;">
+                </div>
                 <button onclick="comenzarTurno()" class="btn btn-massive btn-success shadow">¡¡A rodar!!!!</button>
             </div>
         </div>
+
         <div id="p1" class="hidden">
-            <div class="d-flex justify-content-between align-items-center mb-4"><span class="status-badge" id="txt-inicio">INICIO: --:--</span><span class="status-badge bg-primary text-white shadow-sm" id="txt-km">KM: --</span></div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="status-badge" id="txt-inicio">INICIO: --:--</span>
+                <span class="status-badge bg-primary text-white shadow-sm" id="txt-tiempo-turno" style="font-family: 'Courier New', monospace; font-size: 1.1rem; min-width: 105px; text-align: center;">00:00:00</span>
+            </div>
             <div id="sec-asignar"><button onclick="registrarAsignacion()" class="btn btn-massive btn-warning text-white shadow">🔔 Nuevo Pedido Asignado</button></div>
-            <div id="sec-ir-a-partner" class="hidden text-center"><div class="alert alert-warning py-3 rounded-4 shadow-sm fw-bold mb-3"><span class="d-block fs-5">📍 EN RUTA AL LOCAL</span><small>Calculando tiempo de desplazamiento...</small></div><button onclick="registrarLlegadaLocal()" class="btn btn-massive btn-info text-white shadow">He llegado al Local</button></div>
+            <div id="sec-ir-a-partner" class="hidden text-center">
+                <div class="alert alert-warning py-3 rounded-4 shadow-sm fw-bold mb-3"><span class="d-block fs-5">📍 EN RUTA AL LOCAL</span><small>Calculando tiempo de desplazamiento...</small></div>
+                <button onclick="registrarLlegadaLocal()" class="btn btn-massive btn-info text-white shadow">He llegado al Local</button>
+            </div>
             <div class="mt-5 pt-3">
                 <div id="instr-entrega" class="alert alert-info py-2 text-center small fw-bold mb-4 hidden">💡 TOCA EL CLIENTE AL LLEGAR AL PORTAL</div>
                 <div class="d-flex justify-content-between align-items-end mb-3"><h5 class="text-muted small fw-bold text-uppercase mb-0">Pedidos en Mochila</h5><span class="badge bg-secondary rounded-pill px-3" id="cnt-bandeja">0</span></div>
                 <div id="lista-bandeja"></div>
             </div>
-            <div class="mt-5 pt-4"><button onclick="navegar(4)" class="btn btn-massive btn-outline-danger w-100" style="border-width: 3px;">Terminar Turno</button></div>
+            <div class="mt-5 pt-4 d-flex justify-content-start">
+                <button onclick="confirmarFinTurno()" class="btn text-white fw-bold shadow" style="background-color: #ff0000; border-radius: 12px; padding: 15px; width: 35%;">Terminar Turno</button>
+            </div>
         </div>
+
         <div id="p2" class="hidden">
             <button onclick="navegar(1)" class="btn-undo border-0">← Cancelar recogida</button>
             <h4 class="fw-bold mb-4">Información de la recogida</h4>
             <div class="card p-3 border-0 shadow-sm rounded-4 mb-4">
                 <label class="small fw-bold text-muted text-uppercase mb-2">Pedidos en esta recogida:</label>
-                <select id="inp-n" class="form-select form-select-lg py-3 mb-3 fw-bold" onchange="generarCamposNombres()" style="border: 2px solid var(--info);"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select>
-                <div id="contenedor-nombres" class="name-input-group" style="padding: 10px; margin-bottom: 15px; max-height: 250px; overflow-y: auto;"></div>
+                
+                <div class="order-selector">
+                    <button type="button" class="order-btn active" onclick="setNumPedidos(1, this)">1</button>
+                    <button type="button" class="order-btn" onclick="setNumPedidos(2, this)">2</button>
+                    <button type="button" class="order-btn" onclick="setNumPedidos(3, this)">3</button>
+                    <button type="button" class="order-btn" onclick="setNumPedidos(4, this)">4</button>
+                    <button type="button" class="order-btn" onclick="setNumPedidos(5, this)">5</button>
+                </div>
+                <input type="hidden" id="inp-n" value="1">                
+                
                 <label class="small fw-bold text-muted text-uppercase mb-3">¿Excesos detectados?</label>
-                <div class="row g-2 mb-3"><div class="col-6"><div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-p').click()"><input type="checkbox" id="chk-p" class="form-check-input" onclick="event.stopPropagation()"> <span>PESO</span></div></div><div class="col-6"><div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-v').click()"><input type="checkbox" id="chk-v" class="form-check-input" onclick="event.stopPropagation()"> <span>VOL</span></div></div></div>
-                <div class="mb-3"><label class="small fw-bold text-muted text-uppercase mb-2">Notas de recogida:</label><textarea id="obs-rec" class="form-control rounded-3" rows="2" placeholder="Ej: Bolsa rota, líquido, caja gigante..."></textarea></div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6"><div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-p').click()"><input type="checkbox" id="chk-p" class="form-check-input" onclick="event.stopPropagation()"> <span>PESO</span></div></div>
+                    <div class="col-6"><div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-v').click()"><input type="checkbox" id="chk-v" class="form-check-input" onclick="event.stopPropagation()"> <span>VOL</span></div></div>
+                </div>
+                <div class="mb-3"><label class="small fw-bold text-muted text-uppercase mb-2">Notas de recogida:</label><textarea id="obs-rec" class="form-control rounded-3" rows="2" placeholder="Ej: Bolsa rota..."></textarea></div>
                 <div class="timer-display" id="cron-local" style="font-size: 2.5rem; margin: 10px 0;">00:00</div>
                 <button onclick="finRecogida()" class="btn btn-massive btn-success shadow">Finalizar recogida</button>
             </div>
         </div>
+
         <div id="p3" class="hidden">
             <button onclick="navegar(1)" class="btn-undo border-0">← Volver a mochila</button>
             <h4 id="tit-ent" class="fw-bold mb-4 text-primary">Detalles de Entrega</h4>
-            <div class="smart-paste-area shadow-sm"><label class="small fw-bold text-dark mb-3 d-block text-uppercase">📋 PEGA LOS DATOS DE LA APP AQUÍ:</label><textarea id="smart-paste-ent" placeholder="Copia el texto de la App del repartidor y pégalo aquí..." oninput="autoFillEnt()"></textarea></div>
+            <div class="smart-paste-area shadow-sm"><label class="small fw-bold text-dark mb-3 d-block text-uppercase">📋 PEGA LOS DATOS DE LA APP AQUÍ:</label><textarea id="smart-paste-ent" placeholder="Copia el texto de la App del repartidor..." oninput="autoFillEnt()"></textarea></div>
             <div class="card p-4 border-0 shadow-sm rounded-4">
                 <div class="timer-display" id="cron-cli">00:00</div>
                 <div class="mb-4"><label class="small fw-bold text-muted text-uppercase mb-2">ID Pedido Extraído:</label><input type="text" id="inp-id" class="form-control form-control-lg input-readonly py-3" placeholder="Esperando datos..." readonly></div>
-                <div class="mb-4"><label class="small fw-bold text-muted text-uppercase mb-2">Observaciones Entrega:</label><textarea id="obs-ent" class="form-control" rows="2" placeholder="Notas sobre el portal o cliente..."></textarea></div>
+                <div class="mb-4"><label class="small fw-bold text-muted text-uppercase mb-2">Observaciones Entrega:</label><textarea id="obs-ent" class="form-control" rows="2" placeholder="Notas sobre el portal..."></textarea></div>
                 <button id="btn-fin-ent" onclick="finEntrega()" class="btn btn-massive btn-success shadow" disabled>Cerrar Pedido</button>
             </div>
         </div>
+
         <div id="p4" class="hidden text-center">
             <h3 class="fw-bold mb-4">Cierre de Auditoría</h3>
             <div class="card p-4 border-0 shadow rounded-4 mb-4">
@@ -92,82 +128,399 @@
             </div>
             <button onclick="navegar(1)" class="btn btn-link text-muted fw-bold text-decoration-none">Volver a la mochila</button>
         </div>
+
         <div id="global-log-wrapper" class="global-log hidden">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3"><h6 class="text-muted small fw-bold text-uppercase m-0">Movimientos Recientes:</h6><span class="badge bg-light text-dark border">V7.3</span></div>
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3"><h6 class="text-muted small fw-bold text-uppercase m-0">Movimientos Recientes:</h6><span class="badge bg-light text-dark border">V8.0</span></div>
             <div id="timeline-content" class="timeline"></div>
         </div>
     </div>
+
     <script>
+        // ESTADO INICIAL
         let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
         let pilaUndo = JSON.parse(localStorage.getItem('pila_undo_v7.3')) || [];
         let timer;
-        const fixT = () => new Date(Date.now()); 
+        const fixT = () => new Date();
         const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
-        function limpiarFormularioRecogida() { document.getElementById('inp-n').value = "1"; generarCamposNombres(); document.getElementById('chk-p').checked = false; document.getElementById('chk-v').checked = false; document.getElementById('obs-rec').value = ''; document.getElementById('cron-local').innerText = "00:00"; }
-        function generarCamposNombres() { const n = parseInt(document.getElementById('inp-n').value); const container = document.getElementById('contenedor-nombres'); container.innerHTML = ''; const estiloCompacto = n > 3 ? 'py-1 mb-1 fs-6' : 'py-2 mb-2'; for(let i=1; i<=n; i++) { container.innerHTML += `<input type="text" class="form-control cli-name fw-bold ${estiloCompacto}" placeholder="Nombre Cliente ${n>1?i:''}">`; } }
-        function autoFillEnt() { const val = document.getElementById('smart-paste-ent').value.trim(); if(!val) return; const partnerMatch = val.match(/^(.*?)\s+Completado/i); const timeMatch = val.match(/Completado\s+a\s+las\s+(\d{1,2}:\d{2})/i); const idMatch = val.match(/Pedido\s+n\s*\.\s*º\s*(\d+)/i); if(idMatch && idMatch[1]) { const newId = idMatch[1]; const yaExiste = est.hist.some(p => p.idPed === newId); if(yaExiste) { alert("🛑 ¡AVISO DE SEGURIDAD!\n\nEl pedido (" + newId + ") ya ha sido auditado anteriormente.\n\nVerifica el ID."); document.getElementById('smart-paste-ent').value = ""; document.getElementById('inp-id').value = ""; valId(); return; } if(partnerMatch && partnerMatch[1]) est.entAct.partner = partnerMatch[1].trim(); if(timeMatch && timeMatch[1]) est.entAct.hFinApp = timeMatch[1].trim(); document.getElementById('inp-id').value = newId; valId(); } }
-        function registrarPuntoRetorno() { pilaUndo.push(JSON.parse(JSON.stringify(est))); if(pilaUndo.length > 20) pilaUndo.shift(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); }
-        function deshacer() { if(pilaUndo.length > 0) { est = pilaUndo.pop(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); clearInterval(timer); navegar(est.f, true); } }
-        function navegar(fase, bypassReset = false) { document.querySelectorAll('[id^="p"]').forEach(p => p.classList.add('hidden')); document.getElementById('p'+fase).classList.remove('hidden'); const standBy = (fase === '_pre' || fase === 0); document.getElementById('undo-wrapper').classList.toggle('hidden', standBy); document.getElementById('global-log-wrapper').classList.toggle('hidden', standBy); est.f = fase; if(fase === 1) renderMenu(); if(fase === 2 && est.hUlt) startCron('cron-local', est.hUlt); if(fase === 3 && est.entAct) startCron('cron-cli', est.entAct.hLlegC); if(fase === 4) { prepararPantallaFinal(); document.getElementById('btnExportar').disabled = (est.hist.length === 0); } renderTimeline(); saveState(); }
+        const obtenerGPS = () => {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve({ lat: null, lng: null });
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    (err) => resolve({ lat: null, lng: null }),
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            });
+        };
+
+        // MOTOR CRONOMETRO GLOBAL (Desde el Segundo 1)
+        function actualizarCronometroTurno() {
+            if(!est.hIni) return;
+            const diff = fixT() - new Date(est.hIni);
+            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            const el = document.getElementById('txt-tiempo-turno');
+            if(el) el.innerText = `${h}:${m}:${s}`;
+        }
+        setInterval(actualizarCronometroTurno, 1000);
+
+        // FUNCIONES DE SOPORTE
+        function setNumPedidos(n, btn) {
+            document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('inp-n').value = n;
+            generarCamposNombres();
+        }
+
+        function generarCamposNombres() {
+            const n = parseInt(document.getElementById('inp-n').value);
+            const container = document.getElementById('contenedor-nombres');
+            container.innerHTML = '';
+            const estiloCompacto = n > 3 ? 'py-1 mb-1 fs-6' : 'py-2 mb-2';
+            for(let i=1; i<=n; i++) {
+                container.innerHTML += `<input type="text" class="form-control cli-name fw-bold ${estiloCompacto}" placeholder="Nombre Cliente ${n>1?i:''}">`;
+            }
+        }
+
+        function limpiarFormularioRecogida() {
+            document.getElementById('inp-n').value = "1";
+            document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.order-btn')[0].classList.add('active');
+            generarCamposNombres();
+            document.getElementById('chk-p').checked = false;
+            document.getElementById('chk-v').checked = false;
+            document.getElementById('obs-rec').value = '';
+            document.getElementById('cron-local').innerText = "00:00";
+        }
+
+        function autoFillEnt() {
+            const val = document.getElementById('smart-paste-ent').value.trim();
+            if(!val) return;
+            const partnerMatch = val.match(/^(.*?)\s+Completado/i);
+            const idMatch = val.match(/Pedido\s+n\s*\.\s*º\s*(\d+)/i);
+            const timeMatch = val.match(/Completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
+            if(idMatch && idMatch[1]) {
+                const newId = idMatch[1];
+                if(est.hist.some(p => p.idPed === newId)) {
+                    alert("🛑 ¡AVISO DE SEGURIDAD!\nPedido duplicado.");
+                    document.getElementById('smart-paste-ent').value = "";
+                    return;
+                }
+                if(partnerMatch && partnerMatch[1]) est.entAct.partner = partnerMatch[1].trim();
+                if(timeMatch && timeMatch[1]) est.entAct.hFinApp = timeMatch[1].trim();
+                document.getElementById('inp-id').value = newId;
+                valId();
+            }
+        }
+
+        // NAVEGACIÓN Y ESTADO
+        function navegar(fase, bypassReset = false) {
+            document.querySelectorAll('[id^="p"]').forEach(p => p.classList.add('hidden'));
+            document.getElementById('p'+fase).classList.remove('hidden');
+            const standBy = (fase === '_pre' || fase === 0);
+            document.getElementById('undo-wrapper').classList.toggle('hidden', standBy);
+            document.getElementById('global-log-wrapper').classList.toggle('hidden', standBy);
+            est.f = fase;
+            if(fase === 1) renderMenu();
+            if(fase === 2 && est.hUlt) startCron('cron-local', est.hUlt);
+            if(fase === 3 && est.entAct) startCron('cron-cli', est.entAct.hLlegC);
+            if(fase === 4) { prepararPantallaFinal(); }
+            renderTimeline();
+            saveState();
+        }
+
         function iniciarJornada() { registrarPuntoRetorno(); est.hIni = fixT(); est.hUlt = est.hIni; est.logHitos = [{ texto: "Inicio de Turno Oficial", hora: est.hIni }]; navegar(0); }
-        function comenzarTurno() { registrarPuntoRetorno(); const hRodar = fixT(); est.hUlt = hRodar; est.kmI = document.getElementById('usarKM').checked ? (parseFloat(document.getElementById('kmI').value) || 0) : "N/R"; est.logHitos.push({ texto: "Inicio de Ruta (A rodar)", hora: hRodar }); navegar(1); }
-        function registrarAsignacion() { registrarPuntoRetorno(); est.hAsig = fixT(); est.hUlt = est.hAsig; est.logHitos.push({ texto: "Pedido Asignado", hora: est.hAsig }); navegar(1); }
-        function registrarLlegadaLocal() { registrarPuntoRetorno(); est.hUlt = fixT(); est.logHitos.push({ texto: "Llegada al Local", hora: est.hUlt }); limpiarFormularioRecogida(); navegar(2); }
-        function finRecogida() { registrarPuntoRetorno(); const h = fixT(); const n = parseInt(document.getElementById('inp-n').value); const names = Array.from(document.querySelectorAll('.cli-name')).map(i => i.value || "Cliente"); const eP = document.getElementById('chk-p').checked ? 1 : 0; const eV = document.getElementById('chk-v').checked ? 1 : 0; const obs = document.getElementById('obs-rec').value; for(let i=0; i<n; i++) { est.bandeja.push({ id: Date.now() + i, partner: "Pdte. extracción...", cliente: names[i], hAsig: est.hAsig, hLlegL: est.hUlt, hRec: h, idx: i+1, total: n, excP: (i===0 ? eP : 0), excV: (i===0 ? eV : 0), obsRec: (i===0 ? obs : ""), hFinApp: "" }); } est.logHitos.push({ texto: `Carga finalizada (${n} pedidos)`, hora: h }); est.hAsig = null; est.hUlt = h; clearInterval(timer); navegar(1); }
-        function preEntrega(id) { registrarPuntoRetorno(); est.entAct = est.bandeja.find(e => e.id === id); est.entAct.hLlegC = fixT(); est.logHitos.push({ texto: `Llegada portal: ${est.entAct.cliente}`, hora: est.entAct.hLlegC }); document.getElementById('tit-ent').innerText = `Entrega: ${est.entAct.cliente} (${est.entAct.idx}/${est.entAct.total})`; document.getElementById('inp-id').value = ""; document.getElementById('smart-paste-ent').value = ''; navegar(3); valId(); }
-        function finEntrega() { registrarPuntoRetorno(); const h = fixT(); const idPed = document.getElementById('inp-id').value; const obsE = document.getElementById('obs-ent').value; est.hist.push({ ...est.entAct, hFin:h, idPed: idPed, obsEnt: obsE }); est.logHitos.push({ texto: `Entrega cerrada ID: ${idPed}`, hora: h }); est.bandeja = est.bandeja.filter(e => e.id !== est.entAct.id); est.hUlt = h; est.entAct=null; clearInterval(timer); document.getElementById('inp-id').value = ''; document.getElementById('obs-ent').value = ''; navegar(1); }
-        function renderMenu() { document.getElementById('txt-inicio').innerText = "INICIO: " + fmtH(est.hIni); document.getElementById('txt-km').innerText = "KM: " + est.kmI; document.getElementById('cnt-bandeja').innerText = est.bandeja.length; document.getElementById('sec-asignar').classList.toggle('hidden', !!est.hAsig); document.getElementById('sec-ir-a-partner').classList.toggle('hidden', !est.hAsig); document.getElementById('instr-entrega').classList.toggle('hidden', est.bandeja.length === 0); const lb = document.getElementById('lista-bandeja'); lb.innerHTML = est.bandeja.length ? '' : '<p class="text-center text-muted small mt-4">Mochila vacía</p>'; est.bandeja.forEach(e => { lb.innerHTML += `<div class="card card-entrega shadow-sm" onclick="preEntrega(${e.id})"><div class="d-flex justify-content-between align-items-center"><strong class="fs-6">📍 ${e.cliente} (${e.idx}/${e.total})</strong><div>${e.excP ? '<span class="badge bg-danger me-1">PESO</span>' : ''}${e.excV ? '<span class="badge bg-info">VOL</span>' : ''}</div></div></div>`; }); }
-        function renderTimeline() { const tl = document.getElementById('timeline-content'); tl.innerHTML = est.logHitos.length ? '' : '<div class="small text-muted">Esperando actividad...</div>'; est.logHitos.slice(-5).forEach(h => { tl.innerHTML += `<div class="timeline-item"><span class="timeline-time">${fmtH(h.hora)}</span> ${h.texto}</div>`; }); }
-        function startCron(id, ref) { const r = new Date(ref); if(timer) clearInterval(timer); timer = setInterval(() => { const s = Math.floor((fixT() - r) / 1000); document.getElementById(id).innerText = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }, 1000); }
+        function comenzarTurno() { 
+            registrarPuntoRetorno(); 
+            est.hUlt = fixT(); 
+            
+            // --- LÓGICA DE AUTO-INCREMENTO INTELIGENTE ---
+            const hoy = new Date().toISOString().slice(0, 10); // "2026-04-28"
+            // Leemos el contador persistente (este no se borra al reiniciar el turno)
+            let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || { fecha: hoy, ultimoTurno: 0 };
+
+            if (persistencia.fecha !== hoy) {
+                // Si es un día nuevo, reseteamos a turno 1
+                persistencia.fecha = hoy;
+                persistencia.ultimoTurno = 1;
+            } else {
+                // Si es el mismo día, incrementamos el turno
+                persistencia.ultimoTurno++;
+            }
+
+            // Guardamos la persistencia para el próximo turno
+            localStorage.setItem('auditor_master_stats', JSON.stringify(persistencia));
+            
+            // Asignamos el turno al estado actual con formato 0X
+            est.turno = persistencia.ultimoTurno.toString().padStart(2, '0'); 
+            // ----------------------------------------------
+
+            est.kmI = document.getElementById('usarKM').checked ? (parseFloat(document.getElementById('kmI').value) || 0) : "N/R"; 
+            est.logHitos.push({ texto: `Turno ${est.turno} iniciado`, hora: est.hUlt });
+            navegar(1); 
+        }
+        async function registrarAsignacion() { 
+            registrarPuntoRetorno(); 
+            est.hAsig = fixT(); 
+            est.hUlt = est.hAsig; 
+            est.coordAsig = await obtenerGPS();
+            est.logHitos.push({ texto: "Pedido Asignado", hora: est.hAsig }); 
+            navegar(1); 
+        }
+
+        async function registrarLlegadaLocal() { 
+            registrarPuntoRetorno(); 
+            est.hUlt = fixT(); 
+            est.coordLlegL = await obtenerGPS();
+            est.logHitos.push({ texto: "Llegada al Local", hora: est.hUlt }); 
+            limpiarFormularioRecogida(); 
+            navegar(2); 
+        }
+        function confirmarFinTurno() {
+            if(confirm("🚨 ATENCIÓN 🚨\n\n¿Estás completamente seguro de que quieres FINALIZAR EL TURNO?\n\nVerifica que no tienes pedidos en la mochila antes de continuar.")) {
+                navegar(4);
+            }
+        }
+
+        async function finRecogida() {
+            registrarPuntoRetorno();
+            const h = fixT();
+            const n = parseInt(document.getElementById('inp-n').value);
+            
+            // Punto 3: Capturamos la coordenada de recogida efectiva
+            const ubicacionRecogida = await obtenerGPS();
+
+            for(let i=0; i<n; i++) {
+                const identificador = `${i+1}/${n}`; // Formato 1/2, 2/2...
+                est.bandeja.push({ 
+                    id: Date.now() + i, 
+                    partner: "Pdte...", 
+                    cliente: identificador, // Guardamos el índice como "nombre"
+                    hAsig: est.hAsig, 
+                    hLlegL: est.hUlt, 
+                    hRec: h, 
+                    coordAsig: est.coordAsig,
+                    coordLlegL: est.coordLlegL,
+                    coordRec: ubicacionRecogida,
+                    idx: i+1, total: n, 
+                    excP: (i===0 && document.getElementById('chk-p').checked ? 1 : 0), 
+                    excV: (i===0 && document.getElementById('chk-v').checked ? 1 : 0), 
+                    obsRec: (i===0 ? document.getElementById('obs-rec').value : "") 
+                });
+            }
+            est.logHitos.push({ texto: `Carga finalizada (${n} pedidos)`, hora: h });
+            est.hAsig = null; est.hUlt = h; clearInterval(timer); navegar(1);
+        }
+
+        async function preEntrega(id) {
+            registrarPuntoRetorno();
+            est.entAct = est.bandeja.find(e => e.id === id);
+            est.entAct.hLlegC = fixT();
+            est.entAct.coordLlegC = await obtenerGPS();
+
+            est.logHitos.push({ texto: `Llegada portal: Pedido ${est.entAct.cliente}`, hora: est.entAct.hLlegC });
+            
+            // Título de la pantalla ahora dirá: "Entrega: 1/2"
+            document.getElementById('tit-ent').innerText = `Entrega Pedido: ${est.entAct.cliente}`;
+            
+            document.getElementById('smart-paste-ent').value = '';
+            document.getElementById('inp-id').value = '';
+            document.getElementById('obs-ent').value = '';
+            document.getElementById('btn-fin-ent').disabled = true;
+            navegar(3);
+        }
+
+        function finEntrega() {
+            registrarPuntoRetorno();
+            const h = fixT();
+            est.hist.push({ ...est.entAct, hFin:h, idPed: document.getElementById('inp-id').value, obsEnt: document.getElementById('obs-ent').value });
+            est.logHitos.push({ texto: `Entrega cerrada`, hora: h });
+            est.bandeja = est.bandeja.filter(e => e.id !== est.entAct.id);
+            est.hUlt = h; est.entAct=null; clearInterval(timer);
+            document.getElementById('inp-id').value = ''; document.getElementById('obs-ent').value = '';
+            navegar(1);
+        }
+
+        function renderMenu() {
+            document.getElementById('txt-inicio').innerText = "INICIO: " + fmtH(est.hIni);
+            document.getElementById('cnt-bandeja').innerText = est.bandeja.length;
+            document.getElementById('sec-asignar').classList.toggle('hidden', !!est.hAsig);
+            document.getElementById('sec-ir-a-partner').classList.toggle('hidden', !est.hAsig);
+            const lb = document.getElementById('lista-bandeja');
+            lb.innerHTML = est.bandeja.length ? '' : '<p class="text-center text-muted small mt-4">Mochila vacía</p>';
+            est.bandeja.forEach(e => {
+                lb.innerHTML += `<div class="card card-entrega shadow-sm" onclick="preEntrega(${e.id})"><div><strong>📍 ${e.cliente} (${e.idx}/${e.total})</strong></div></div>`;
+            });
+        }
+
+        function renderTimeline() {
+            const tl = document.getElementById('timeline-content');
+            tl.innerHTML = '';
+            est.logHitos.slice(-5).forEach(h => {
+                tl.innerHTML += `<div class="timeline-item"><span class="timeline-time">${fmtH(h.hora)}</span> ${h.texto}</div>`;
+            });
+        }
+
+        function startCron(id, ref) {
+            const r = new Date(ref);
+            if(timer) clearInterval(timer);
+            timer = setInterval(() => {
+                const s = Math.floor((fixT() - r) / 1000);
+                const el = document.getElementById(id);
+                if(el) el.innerText = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+            }, 1000);
+        }
+
         function valId() { document.getElementById('btn-fin-ent').disabled = document.getElementById('inp-id').value.length < 5; }
+        function registrarPuntoRetorno() { pilaUndo.push(JSON.parse(JSON.stringify(est))); if(pilaUndo.length > 20) pilaUndo.shift(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); }
+        function deshacer() { if(pilaUndo.length > 0) { est = pilaUndo.pop(); clearInterval(timer); navegar(est.f, true); } }
+        function saveState() { localStorage.setItem('auditor_v7.3', JSON.stringify(est)); }
         function prepararPantallaFinal() { if (est.kmI !== "N/R") validarKmFinales(); }
         function validarKmFinales() { const val = parseFloat(document.getElementById('kmF').value); document.getElementById('btnExportar').disabled = (est.kmI !== "N/R" && (isNaN(val) || val < est.kmI)); }
-        function saveState() { localStorage.setItem('auditor_v7.3', JSON.stringify(est)); }
-        function resetInterno() { if(confirm("¿Seguro? Se borrarán los datos actuales.")){ localStorage.removeItem('auditor_v7.3'); localStorage.removeItem('pila_undo_v7.3'); location.reload(); } }
-        async function exportarCSV() {
-            if (!est.hist || est.hist.length === 0) { alert("⚠️ No hay datos."); return; }
-            const hF = fixT(); const kmF = parseFloat(document.getElementById('kmF').value) || 0;
-            const fechaRaw = new Date(); const fechaISO = fechaRaw.toISOString().slice(0,10).replace(/-/g, '_');
-            const diffMsTurno = hF - new Date(est.hIni); const hrs = Math.floor(diffMsTurno / 3600000); const mins = Math.floor((diffMsTurno % 3600000) / 60000); const durText = hrs + "h " + mins + "min";
-            const totalPedidos = est.hist.length; const recogidasRealizadas = []; let totalWaitTime = 0; let totalCompWaitTime = 0; let sumExcPeso = 0; let sumExcVol = 0;
-            est.hist.forEach(p => {
-                const waitL = (new Date(p.hRec) - new Date(p.hLlegL)) / 60000; const waitC = (new Date(p.hFin) - new Date(p.hLlegC)) / 60000;
-                totalWaitTime += (waitL + waitC); totalCompWaitTime += (Math.max(0, waitL - 5) + Math.max(0, waitC - 5));
-                sumExcPeso += p.excP; sumExcVol += p.excV;
-                if(!recogidasRealizadas.find(r => r.hRec === p.hRec)) { recogidasRealizadas.push({ hRec: p.hRec, total: p.total }); }
-            });
-            const totalDirecciones = recogidasRealizadas.length + totalPedidos;
-            let c = "\uFEFF" + fechaISO.replace(/_/g, '/') + ";Inicio " + fmtH(est.hIni) + ";Fin " + fmtH(hF) + ";Duración " + durText + "\n\n";
-            c += "ID;PARTNER;CLIENTE;EXC.PESO;EXC.VOL;H.ASIG;H.LLEG.PARTNER;H.RECOGIDA;TRAMO A;ESPERA PARTN;H.LLEG.DESTINO;H.FIN;H.FIN APP;TRAMO B;ESPERA CLI;OBS RECOGIDA;OBS ENTREGA\n";
-            est.hist.forEach(p => {
-                const tA = ((new Date(p.hRec) - new Date(p.hAsig)) / 60000).toFixed(1); const eA = ((new Date(p.hRec) - new Date(p.hLlegL)) / 60000).toFixed(1);
-                const tB = ((new Date(p.hFin) - new Date(p.hRec)) / 60000).toFixed(1); const eB = ((new Date(p.hFin) - new Date(p.hLlegC)) / 60000).toFixed(1);
-                c += `="${p.idPed}";${p.partner};${p.cliente};${p.excP};${p.excV};${fmtH(p.hAsig)};${fmtH(p.hLlegL)};${fmtH(p.hRec)};${tA} min;${eA} min;${fmtH(p.hLlegC)};${fmtH(p.hFin)};${p.hFinApp || "---"};${tB} min;${eB} min;${p.obsRec};${p.obsEnt}\n`;
-            });
-            const kmTurno = est.kmI !== "N/R" ? (kmF - est.kmI).toFixed(1) : "0";
-            c += `\nESTADISTICAS DE JORNADA;;;AUDITORIA DE COSTES\n`;
-            const nombresMult = ["SENCILLOS", "DOBLES", "TRIPLES", "CUÁDRUPLES", "QUÍNTUPLES", "SÉXTUPLES", "SÉPTUPLES", "ÓCTUPLES", "NÚNUPLES"];
-            let colIzquierda = [`TOTAL PEDIDOS;${totalPedidos}`];
-            for(let i=1; i<=9; i++) { const count = recogidasRealizadas.filter(r => r.total == i).length; if(count > 0) colIzquierda.push(`PEDIDOS ${nombresMult[i-1]};${count}`); }
-            colIzquierda.push(`TOTAL DIRECCIONES;${totalDirecciones}`);
-            let colDerecha = [`Tiempos de Espera Totales;${totalWaitTime.toFixed(1)} min`, `Tiempos de Espera Computables;${totalCompWaitTime.toFixed(1)} min`, `Excesos Totales;${sumExcPeso + sumExcVol}`, `Excesos por Peso;${sumExcPeso}`, `Excesos por Volumen;${sumExcVol}`];
-            const totalFilasStats = Math.max(colIzquierda.length, colDerecha.length);
-            for(let i=0; i<totalFilasStats; i++) { const izq = colIzquierda[i] || ";"; const der = colDerecha[i] || ";"; c += `${izq};;${der}\n`; }
-            c += `\nRESUMEN KM;KM INICIO;${est.kmI};KM FIN;${kmF};KM TURNO;${kmTurno}\n`;
-            let counterData = JSON.parse(localStorage.getItem('auditor_daily_counter')) || { date: "", count: 0 };
-            if (counterData.date === fechaISO) { counterData.count++; } else { counterData.date = fechaISO; counterData.count = 1; }
-            localStorage.setItem('auditor_daily_counter', JSON.stringify(counterData));
-            const fileName = `Turno_${String(counterData.count).padStart(2, '0')}_${fechaISO}.csv`;
-            const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
-            const file = new File([blob], fileName, { type: 'text/csv' });
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                try { await navigator.share({ files: [file], title: 'Auditoría ' + fileName, text: 'Reporte de jornada.' }); activarModoReset(); }
-                catch (err) { if (err.name !== 'AbortError') activarDescargaClasica(c, fileName); }
-            } else { activarDescargaClasica(c, fileName); }
+
+        // Función para consultar al servidor de mapas (OSRM)
+        async function obtenerDistanciaRuta(origen, destino) {
+            if (!origen.lat || !destino.lat) return { km: 0, tipo: "Sin GPS" };
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${origen.lng},${origen.lat};${destino.lng},${destino.lat}?overview=false`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+                if (data.code === 'Ok') {
+                    return { km: (data.routes[0].distance / 1000).toFixed(2), tipo: "Ruta Vial" };
+                }
+                throw new Error();
+            } catch (e) {
+                // Plan B: Distancia en línea recta (Haversine)
+                const R = 6371;
+                const dLat = (destino.lat - origen.lat) * Math.PI / 180;
+                const dLng = (destino.lng - origen.lng) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(origen.lat * Math.PI / 180) * Math.cos(destino.lat * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return { km: (R * c).toFixed(2), tipo: "Línea Recta (Fallo Servidor)" };
+            }
         }
-        function activarDescargaClasica(contenido, nombre) { const b = new Blob([contenido], { type: 'text/csv;charset=utf-8;' }); const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = nombre; l.click(); activarModoReset(); }
-        function activarModoReset() { const btn = document.getElementById('btnExportar'); const msg = document.getElementById('msg-seguridad'); const kmWrap = document.getElementById('wrapper-km-final'); if(kmWrap) kmWrap.style.display = 'none'; btn.onclick = resetInterno; btn.innerText = "🚨 FINALIZAR Y REINICIAR APP"; btn.classList.replace('btn-primary', 'btn-danger'); msg.classList.replace('alert-secondary', 'alert-success'); msg.innerHTML = "<strong>¡EXPORTADO CON ÉXITO!</strong><br>Ya puedes borrar los datos locales."; }
-        window.onload = () => { if(est.f !== '_pre') navegar(est.f); };
+
+        async function exportarCSV() {
+            const btn = document.getElementById('btnExportar');
+            btn.disabled = true;
+            btn.innerText = "Sellando Auditoría Final... 🛰️";
+
+            const hF = fixT();
+            const hIniDate = new Date(est.hIni);
+            const fechaHoy = hIniDate.toLocaleDateString();
+            const kmF = parseFloat(document.getElementById('kmF').value) || 0;
+            const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
+            
+            const calcularMetricasTiempo = (ms, descuentoMin = 0) => {
+                let msFinal = ms - (descuentoMin * 60000);
+                if (msFinal < 0) msFinal = 0;
+                const totalSeg = Math.floor(msFinal / 1000);
+                const h = Math.floor(totalSeg / 3600).toString().padStart(2, '0');
+                const m = Math.floor((totalSeg % 3600) / 60).toString().padStart(2, '0');
+                const s = (totalSeg % 60).toString().padStart(2, '0');
+                return { reloj: `${h}:${m}:${s}`, decimal: (msFinal / 60000).toFixed(2) };
+            };
+
+            let totalKmCalc = 0;
+            let totalMinEspL_Adj = 0;
+            let totalMinEspC_Adj = 0;
+            let totalMinPed = 0;
+            let totalExcP = 0, totalExcV = 0;
+            let contadorRecogidasUnicas = 0;
+            let ultHRec = null;
+
+            const dTurno = calcularMetricasTiempo(hF - hIniDate);
+
+            // --- FILA 1 Y 2: CABECERA FIJA PARA EXCEL ---
+            let c = "\uFEFFReporte de Jornada;Fecha;" + fechaHoy + ";Inicio;" + fmtH(est.hIni) + ";Fin;" + fmtH(hF) + ";Minutos_Turno;" + dTurno.decimal + "\n";
+            c += ";Turno;" + est.turno + ";KM_INICIO;" + est.kmI + ";KM_FIN;" + kmF + ";KM_TOTALES;" + (kmF - kmIn).toFixed(1) + "\n\n";
+            
+            c += "ID;CLIENTE;H.ASIG;H.LLEG.LOCAL;T_TRAMO_A;MIN_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;H.LLEG.CLIENTE;T_TRAMO_B;MIN_B;KM_B;T_ESPERA_C(Adj);MIN_ESP_C;H.FIN;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED;TIPO_CALCULO;LINK_ORIGEN;LINK_DESTINO\n";
+
+            for (let i = 0; i < est.hist.length; i++) {
+                const p = est.hist[i];
+                
+                const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
+                const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
+                const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
+                const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
+                const tTot = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
+
+                if (p.hRec !== ultHRec) { contadorRecogidasUnicas++; ultHRec = p.hRec; }
+
+                let rutaA = { km: "0.00", tipo: "Multipedido" };
+                if (i === 0 || p.hRec !== est.hist[i-1].hRec) {
+                    rutaA = await obtenerDistanciaRuta(p.coordAsig, p.coordLlegL);
+                }
+                let origenB = (i > 0 && p.hRec === est.hist[i-1].hRec) ? est.hist[i-1].coordLlegC : p.coordRec;
+                const rutaB = await obtenerDistanciaRuta(origenB, p.coordLlegC);
+                const kmTotPed = (parseFloat(rutaA.km) + parseFloat(rutaB.km)).toFixed(2);
+
+                totalKmCalc += parseFloat(kmTotPed);
+                totalMinEspL_Adj += parseFloat(tEL.decimal);
+                totalMinEspC_Adj += parseFloat(tEC.decimal);
+                totalMinPed += parseFloat(tTot.decimal);
+                totalExcP += (p.excP || 0); totalExcV += (p.excV || 0);
+
+                const lOrg = origenB.lat ? `https://www.google.com/maps?q=${origenB.lat},${origenB.lng}` : "N/R";
+                const lDest = p.coordLlegC.lat ? `https://www.google.com/maps?q=${p.coordLlegC.lat},${p.coordLlegC.lng}` : "N/R";
+
+                c += `${p.idPed};${p.cliente};${fmtH(p.hAsig)};${fmtH(p.hLlegL)};${tA.reloj};${tA.decimal};${rutaA.km};`;
+                c += `${fmtH(p.hRec)};${tEL.reloj};${tEL.decimal};${fmtH(p.hLlegC)};${tB.reloj};${tB.decimal};${rutaB.km};`;
+                c += `${tEC.reloj};${tEC.decimal};${fmtH(p.hFin)};${tTot.reloj};${tTot.decimal};${kmTotPed};${rutaB.tipo};${lOrg};${lDest}\n`;
+            }
+
+            // --- CÁLCULO DE KPIs FINALES ---
+            const totalPedidos = est.hist.length;
+            const direccionesTotales = contadorRecogidasUnicas + totalPedidos;
+            const horasTurno = (hF - hIniDate) / 3600000;
+            const dph = totalPedidos > 0 ? (totalPedidos / horasTurno).toFixed(2) : 0;
+
+            c += "\n\n--- RESUMEN PARA FACTURACIÓN Y EFICIENCIA ---\n";
+            c += `DIRECCIONES TOTALES (Cobrables);${direccionesTotales};(Recogidas: ${contadorRecogidasUnicas} + Entregas: ${totalPedidos})\n`;
+            c += `TOTAL PEDIDOS (Entregas);${totalPedidos}\n`;
+            c += `EFICIENCIA DPH (Pedidos/Hora);${dph}\n`;
+            c += `TIEMPO MEDIO POR PEDIDO;${totalPedidos > 0 ? (totalMinPed/totalPedidos).toFixed(2) : 0} min\n`;
+            c += `TOTAL ESPERA ADJ. LOCAL (-5m);${totalMinEspL_Adj.toFixed(2)} min\n`;
+            c += `TOTAL ESPERA ADJ. CLIENTE (-5m);${totalMinEspC_Adj.toFixed(2)} min\n`;
+            c += `TOTAL EXCESOS DETECTADOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
+            c += `DISTANCIA TOTAL RUTA;${totalKmCalc.toFixed(2)} km\n`;
+
+            // --- LÓGICA DE DESCARGA Y NOMBRE DE ARCHIVO ---
+            const fechaArchivo = hIniDate.toISOString().slice(0, 10); // Genera: 2026-04-28
+            const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            link.href = URL.createObjectURL(blob);
+            
+            // NOMBRE DEL ARCHIVO: aaaa-mm-dd_0X_registro.csv
+            link.download = `${fechaArchivo}_${est.turno || '01'}_registro.csv`;
+            
+            link.click();
+            activarModoReset();
+        }
+
+        function activarModoReset() {
+            const btn = document.getElementById('btnExportar');
+            btn.disabled = false;
+            btn.onclick = () => { 
+                if(confirm("¿Finalizar jornada y limpiar mochila?")) {
+                    // Solo borramos los datos del turno actual y el deshacer
+                    localStorage.removeItem('auditor_v7.3'); 
+                    localStorage.removeItem('pila_undo_v7.3'); 
+                    location.reload(); // Recarga la app para el siguiente turno
+                }
+            };
+            btn.innerText = "🚨 REINICIAR APP";
+            btn.classList.replace('btn-primary', 'btn-danger');
+            document.getElementById('msg-seguridad').innerHTML = "<strong>¡EXPORTADO!</strong> Memoria lista para el siguiente turno.";
+        }
+
+        window.onload = () => { 
+            if(est.f !== '_pre') navegar(est.f); 
+            generarCamposNombres(); 
+        };
     </script>
 </body>
 </html>
