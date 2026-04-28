@@ -488,17 +488,37 @@
             c += `DISTANCIA TOTAL RUTA;${totalKmCalc.toFixed(2)} km\n`;
 
             // --- LÓGICA DE DESCARGA Y NOMBRE DE ARCHIVO ---
-            const fechaArchivo = hIniDate.toISOString().slice(0, 10); // Genera: 2026-04-28
+            // --- LÓGICA DE EXPORTACIÓN INTELIGENTE (Share o Download) ---
+            const fechaArchivo = hIniDate.toISOString().slice(0, 10);
+            const nombreFinal = `${fechaArchivo}_${est.turno || '01'}_registro.csv`;
             const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
             
-            link.href = URL.createObjectURL(blob);
-            
-            // NOMBRE DEL ARCHIVO: aaaa-mm-dd_0X_registro.csv
-            link.download = `${fechaArchivo}_${est.turno || '01'}_registro.csv`;
-            
-            link.click();
-            activarModoReset();
+            // Creamos un objeto de archivo real para poder compartirlo
+            const archivo = new File([blob], nombreFinal, { type: 'text/csv' });
+
+            // 1. Intentamos usar el menú de "Compartir" (Selector de destino en móvil)
+            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+                try {
+                    await navigator.share({
+                        files: [archivo],
+                        title: 'Auditoría de Jornada',
+                        text: `Reporte Turno ${est.turno} - ${fechaExcel}`
+                    });
+                    // Si llega aquí, es que elegiste destino correctamente
+                    activarModoReset();
+                } catch (err) {
+                    // Si cancelas el menú de compartir, no hacemos nada para que no se pierdan los datos
+                    btn.disabled = false;
+                    btn.innerText = "Reintentar Exportar 🛰️";
+                }
+            } else {
+                // 2. Plan B: Descarga tradicional (si el navegador no soporta Share, como en algunos PCs)
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = nombreFinal;
+                link.click();
+                activarModoReset();
+            }
         }
 
         function activarModoReset() {
