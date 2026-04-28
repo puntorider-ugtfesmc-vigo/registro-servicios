@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditor de Tiempos v8.0 - Estabilizado</title>
+    <title>Auditor de Tiempos v11.5 - Ultra</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --warning: #f39c12; --info: #3498db; --secondary: #95a5a6; --danger-soft: #e74c3c; --light-bg: #f0f2f5; --white: #ffffff; }
@@ -130,14 +130,14 @@
         </div>
 
         <div id="global-log-wrapper" class="global-log hidden">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3"><h6 class="text-muted small fw-bold text-uppercase m-0">Movimientos Recientes:</h6><span class="badge bg-light text-dark border">V8.0</span></div>
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3"><h6 class="text-muted small fw-bold text-uppercase m-0">Movimientos Recientes:</h6><span class="badge bg-light text-dark border">V11.5</span></div>
             <div id="timeline-content" class="timeline"></div>
         </div>
     </div>
 
     <script>
         // ESTADO INICIAL
-        let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
+        let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, turno:'01', hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
         let pilaUndo = JSON.parse(localStorage.getItem('pila_undo_v7.3')) || [];
         let timer;
         const fixT = () => new Date();
@@ -153,7 +153,7 @@
             });
         };
 
-        // MOTOR CRONOMETRO GLOBAL (Desde el Segundo 1)
+        // MOTOR CRONOMETRO GLOBAL
         function actualizarCronometroTurno() {
             if(!est.hIni) return;
             const diff = fixT() - new Date(est.hIni);
@@ -170,24 +170,12 @@
             document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById('inp-n').value = n;
-            generarCamposNombres();
-        }
-
-        function generarCamposNombres() {
-            const n = parseInt(document.getElementById('inp-n').value);
-            const container = document.getElementById('contenedor-nombres');
-            container.innerHTML = '';
-            const estiloCompacto = n > 3 ? 'py-1 mb-1 fs-6' : 'py-2 mb-2';
-            for(let i=1; i<=n; i++) {
-                container.innerHTML += `<input type="text" class="form-control cli-name fw-bold ${estiloCompacto}" placeholder="Nombre Cliente ${n>1?i:''}">`;
-            }
         }
 
         function limpiarFormularioRecogida() {
             document.getElementById('inp-n').value = "1";
             document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.order-btn')[0].classList.add('active');
-            generarCamposNombres();
             document.getElementById('chk-p').checked = false;
             document.getElementById('chk-v').checked = false;
             document.getElementById('obs-rec').value = '';
@@ -197,9 +185,7 @@
         function autoFillEnt() {
             const val = document.getElementById('smart-paste-ent').value.trim();
             if(!val) return;
-            const partnerMatch = val.match(/^(.*?)\s+Completado/i);
             const idMatch = val.match(/Pedido\s+n\s*\.\s*º\s*(\d+)/i);
-            const timeMatch = val.match(/Completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
             if(idMatch && idMatch[1]) {
                 const newId = idMatch[1];
                 if(est.hist.some(p => p.idPed === newId)) {
@@ -207,10 +193,8 @@
                     document.getElementById('smart-paste-ent').value = "";
                     return;
                 }
-                if(partnerMatch && partnerMatch[1]) est.entAct.partner = partnerMatch[1].trim();
-                if(timeMatch && timeMatch[1]) est.entAct.hFinApp = timeMatch[1].trim();
                 document.getElementById('inp-id').value = newId;
-                valId();
+                document.getElementById('btn-fin-ent').disabled = false;
             }
         }
 
@@ -234,32 +218,17 @@
         function comenzarTurno() { 
             registrarPuntoRetorno(); 
             est.hUlt = fixT(); 
-            
-            // --- LÓGICA DE AUTO-INCREMENTO INTELIGENTE ---
-            const hoy = new Date().toISOString().slice(0, 10); // "2026-04-28"
-            // Leemos el contador persistente (este no se borra al reiniciar el turno)
+            const hoy = new Date().toISOString().slice(0, 10);
             let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || { fecha: hoy, ultimoTurno: 0 };
-
-            if (persistencia.fecha !== hoy) {
-                // Si es un día nuevo, reseteamos a turno 1
-                persistencia.fecha = hoy;
-                persistencia.ultimoTurno = 1;
-            } else {
-                // Si es el mismo día, incrementamos el turno
-                persistencia.ultimoTurno++;
-            }
-
-            // Guardamos la persistencia para el próximo turno
+            if (persistencia.fecha !== hoy) { persistencia.fecha = hoy; persistencia.ultimoTurno = 1; } 
+            else { persistencia.ultimoTurno++; }
             localStorage.setItem('auditor_master_stats', JSON.stringify(persistencia));
-            
-            // Asignamos el turno al estado actual con formato 0X
             est.turno = persistencia.ultimoTurno.toString().padStart(2, '0'); 
-            // ----------------------------------------------
-
             est.kmI = document.getElementById('usarKM').checked ? (parseFloat(document.getElementById('kmI').value) || 0) : "N/R"; 
             est.logHitos.push({ texto: `Turno ${est.turno} iniciado`, hora: est.hUlt });
             navegar(1); 
         }
+
         async function registrarAsignacion() { 
             registrarPuntoRetorno(); 
             est.hAsig = fixT(); 
@@ -277,8 +246,9 @@
             limpiarFormularioRecogida(); 
             navegar(2); 
         }
+
         function confirmarFinTurno() {
-            if(confirm("🚨 ATENCIÓN 🚨\n\n¿Estás completamente seguro de que quieres FINALIZAR EL TURNO?\n\nVerifica que no tienes pedidos en la mochila antes de continuar.")) {
+            if(confirm("🚨 ATENCIÓN 🚨\n\n¿Estás completamente seguro de que quieres FINALIZAR EL TURNO?")) {
                 navegar(4);
             }
         }
@@ -287,16 +257,13 @@
             registrarPuntoRetorno();
             const h = fixT();
             const n = parseInt(document.getElementById('inp-n').value);
-            
-            // Punto 3: Capturamos la coordenada de recogida efectiva
             const ubicacionRecogida = await obtenerGPS();
-
             for(let i=0; i<n; i++) {
-                const identificador = `${i+1}/${n}`; // Formato 1/2, 2/2...
+                const identificador = `${i+1}/${n}`;
                 est.bandeja.push({ 
                     id: Date.now() + i, 
                     partner: "Pdte...", 
-                    cliente: identificador, // Guardamos el índice como "nombre"
+                    cliente: identificador,
                     hAsig: est.hAsig, 
                     hLlegL: est.hUlt, 
                     hRec: h, 
@@ -318,12 +285,8 @@
             est.entAct = est.bandeja.find(e => e.id === id);
             est.entAct.hLlegC = fixT();
             est.entAct.coordLlegC = await obtenerGPS();
-
             est.logHitos.push({ texto: `Llegada portal: Pedido ${est.entAct.cliente}`, hora: est.entAct.hLlegC });
-            
-            // Título de la pantalla ahora dirá: "Entrega: 1/2"
             document.getElementById('tit-ent').innerText = `Entrega Pedido: ${est.entAct.cliente}`;
-            
             document.getElementById('smart-paste-ent').value = '';
             document.getElementById('inp-id').value = '';
             document.getElementById('obs-ent').value = '';
@@ -338,7 +301,6 @@
             est.logHitos.push({ texto: `Entrega cerrada`, hora: h });
             est.bandeja = est.bandeja.filter(e => e.id !== est.entAct.id);
             est.hUlt = h; est.entAct=null; clearInterval(timer);
-            document.getElementById('inp-id').value = ''; document.getElementById('obs-ent').value = '';
             navegar(1);
         }
 
@@ -350,7 +312,7 @@
             const lb = document.getElementById('lista-bandeja');
             lb.innerHTML = est.bandeja.length ? '' : '<p class="text-center text-muted small mt-4">Mochila vacía</p>';
             est.bandeja.forEach(e => {
-                lb.innerHTML += `<div class="card card-entrega shadow-sm" onclick="preEntrega(${e.id})"><div><strong>📍 ${e.cliente} (${e.idx}/${e.total})</strong></div></div>`;
+                lb.innerHTML += `<div class="card card-entrega shadow-sm" onclick="preEntrega(${e.id})"><div><strong>📍 Pedido ${e.cliente}</strong></div></div>`;
             });
         }
 
@@ -372,175 +334,100 @@
             }, 1000);
         }
 
-        function valId() { document.getElementById('btn-fin-ent').disabled = document.getElementById('inp-id').value.length < 5; }
         function registrarPuntoRetorno() { pilaUndo.push(JSON.parse(JSON.stringify(est))); if(pilaUndo.length > 20) pilaUndo.shift(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); }
         function deshacer() { if(pilaUndo.length > 0) { est = pilaUndo.pop(); clearInterval(timer); navegar(est.f, true); } }
         function saveState() { localStorage.setItem('auditor_v7.3', JSON.stringify(est)); }
         function prepararPantallaFinal() { if (est.kmI !== "N/R") validarKmFinales(); }
         function validarKmFinales() { const val = parseFloat(document.getElementById('kmF').value); document.getElementById('btnExportar').disabled = (est.kmI !== "N/R" && (isNaN(val) || val < est.kmI)); }
 
-        // Función para consultar al servidor de mapas (OSRM)
         async function obtenerDistanciaRuta(origen, destino) {
-            if (!origen.lat || !destino.lat) return { km: 0, tipo: "Sin GPS" };
+            if (!origen.lat || !destino.lat) return { km: "0.00", tipo: "Sin GPS" };
             try {
                 const url = `https://router.project-osrm.org/route/v1/driving/${origen.lng},${origen.lat};${destino.lng},${destino.lat}?overview=false`;
                 const resp = await fetch(url);
                 const data = await resp.json();
-                if (data.code === 'Ok') {
-                    return { km: (data.routes[0].distance / 1000).toFixed(2), tipo: "Ruta Vial" };
-                }
-                throw new Error();
+                return data.code === 'Ok' ? { km: (data.routes[0].distance / 1000).toFixed(2), tipo: "Ruta Vial" } : { km: "0.00", tipo: "Error" };
             } catch (e) {
-                // Plan B: Distancia en línea recta (Haversine)
-                const R = 6371;
-                const dLat = (destino.lat - origen.lat) * Math.PI / 180;
-                const dLng = (destino.lng - origen.lng) * Math.PI / 180;
+                const R = 6371; const dLat = (destino.lat - origen.lat) * Math.PI / 180; const dLng = (destino.lng - origen.lng) * Math.PI / 180;
                 const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(origen.lat * Math.PI / 180) * Math.cos(destino.lat * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                return { km: (R * c).toFixed(2), tipo: "Línea Recta (Fallo Servidor)" };
+                return { km: (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2), tipo: "Línea Recta" };
             }
         }
 
         async function exportarCSV() {
             const btn = document.getElementById('btnExportar');
-            btn.disabled = true;
-            btn.innerText = "Sellando Auditoría Final... 🛰️";
-
-            const hF = fixT();
-            const hIniDate = new Date(est.hIni);
+            btn.disabled = true; btn.innerText = "Sellanado Auditoría Final... 🛰️";
+            const hF = fixT(); const hIniDate = new Date(est.hIni);
             const fechaHoy = hIniDate.toLocaleDateString();
             const kmF = parseFloat(document.getElementById('kmF').value) || 0;
             const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
             
             const calcularMetricasTiempo = (ms, descuentoMin = 0) => {
-                let msFinal = ms - (descuentoMin * 60000);
-                if (msFinal < 0) msFinal = 0;
+                let msFinal = ms - (descuentoMin * 60000); if (msFinal < 0) msFinal = 0;
                 const totalSeg = Math.floor(msFinal / 1000);
-                const h = Math.floor(totalSeg / 3600).toString().padStart(2, '0');
-                const m = Math.floor((totalSeg % 3600) / 60).toString().padStart(2, '0');
-                const s = (totalSeg % 60).toString().padStart(2, '0');
-                return { reloj: `${h}:${m}:${s}`, decimal: (msFinal / 60000).toFixed(2) };
+                return { reloj: `${Math.floor(totalSeg/3600).toString().padStart(2,'0')}:${Math.floor((totalSeg%3600)/60).toString().padStart(2,'0')}:${(totalSeg%60).toString().padStart(2,'0')}`, decimal: (msFinal / 60000).toFixed(2) };
             };
 
-            let totalKmCalc = 0;
-            let totalMinEspL_Adj = 0;
-            let totalMinEspC_Adj = 0;
-            let totalMinPed = 0;
-            let totalExcP = 0, totalExcV = 0;
-            let contadorRecogidasUnicas = 0;
-            let ultHRec = null;
-
+            let totalKmCalc = 0, totalMinEspL_Adj = 0, totalMinEspC_Adj = 0, totalMinPed = 0, totalExcP = 0, totalExcV = 0, contadorRecogidasUnicas = 0, ultHRec = null;
             const dTurno = calcularMetricasTiempo(hF - hIniDate);
 
-            // --- FILA 1 Y 2: CABECERA FIJA PARA EXCEL ---
             let c = "\uFEFFReporte de Jornada;Fecha;" + fechaHoy + ";Inicio;" + fmtH(est.hIni) + ";Fin;" + fmtH(hF) + ";Minutos_Turno;" + dTurno.decimal + "\n";
             c += ";Turno;" + est.turno + ";KM_INICIO;" + est.kmI + ";KM_FIN;" + kmF + ";KM_TOTALES;" + (kmF - kmIn).toFixed(1) + "\n\n";
-            
             c += "ID;CLIENTE;H.ASIG;H.LLEG.LOCAL;T_TRAMO_A;MIN_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;H.LLEG.CLIENTE;T_TRAMO_B;MIN_B;KM_B;T_ESPERA_C(Adj);MIN_ESP_C;H.FIN;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED;TIPO_CALCULO;LINK_ORIGEN;LINK_DESTINO\n";
 
             for (let i = 0; i < est.hist.length; i++) {
                 const p = est.hist[i];
-                
                 const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
                 const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
                 const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
                 const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
                 const tTot = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
-
                 if (p.hRec !== ultHRec) { contadorRecogidasUnicas++; ultHRec = p.hRec; }
-
-                let rutaA = { km: "0.00", tipo: "Multipedido" };
-                if (i === 0 || p.hRec !== est.hist[i-1].hRec) {
-                    rutaA = await obtenerDistanciaRuta(p.coordAsig, p.coordLlegL);
-                }
+                let rutaA = (i === 0 || p.hRec !== est.hist[i-1].hRec) ? await obtenerDistanciaRuta(p.coordAsig, p.coordLlegL) : { km: "0.00" };
                 let origenB = (i > 0 && p.hRec === est.hist[i-1].hRec) ? est.hist[i-1].coordLlegC : p.coordRec;
                 const rutaB = await obtenerDistanciaRuta(origenB, p.coordLlegC);
                 const kmTotPed = (parseFloat(rutaA.km) + parseFloat(rutaB.km)).toFixed(2);
-
-                totalKmCalc += parseFloat(kmTotPed);
-                totalMinEspL_Adj += parseFloat(tEL.decimal);
-                totalMinEspC_Adj += parseFloat(tEC.decimal);
-                totalMinPed += parseFloat(tTot.decimal);
-                totalExcP += (p.excP || 0); totalExcV += (p.excV || 0);
-
+                totalKmCalc += parseFloat(kmTotPed); totalMinEspL_Adj += parseFloat(tEL.decimal); totalMinEspC_Adj += parseFloat(tEC.decimal); totalMinPed += parseFloat(tTot.decimal); totalExcP += (p.excP || 0); totalExcV += (p.excV || 0);
                 const lOrg = origenB.lat ? `https://www.google.com/maps?q=${origenB.lat},${origenB.lng}` : "N/R";
                 const lDest = p.coordLlegC.lat ? `https://www.google.com/maps?q=${p.coordLlegC.lat},${p.coordLlegC.lng}` : "N/R";
-
-                c += `${p.idPed};${p.cliente};${fmtH(p.hAsig)};${fmtH(p.hLlegL)};${tA.reloj};${tA.decimal};${rutaA.km};`;
-                c += `${fmtH(p.hRec)};${tEL.reloj};${tEL.decimal};${fmtH(p.hLlegC)};${tB.reloj};${tB.decimal};${rutaB.km};`;
-                c += `${tEC.reloj};${tEC.decimal};${fmtH(p.hFin)};${tTot.reloj};${tTot.decimal};${kmTotPed};${rutaB.tipo};${lOrg};${lDest}\n`;
+                c += `${p.idPed};${p.cliente};${fmtH(p.hAsig)};${fmtH(p.hLlegL)};${tA.reloj};${tA.decimal};${rutaA.km};${fmtH(p.hRec)};${tEL.reloj};${tEL.decimal};${fmtH(p.hLlegC)};${tB.reloj};${tB.decimal};${rutaB.km};${tEC.reloj};${tEC.decimal};${fmtH(p.hFin)};${tTot.reloj};${tTot.decimal};${kmTotPed};${rutaB.tipo};${lOrg};${lDest}\n`;
             }
 
-            // --- CÁLCULO DE KPIs FINALES ---
-            const totalPedidos = est.hist.length;
-            const direccionesTotales = contadorRecogidasUnicas + totalPedidos;
-            const horasTurno = (hF - hIniDate) / 3600000;
-            const dph = totalPedidos > 0 ? (totalPedidos / horasTurno).toFixed(2) : 0;
-
+            const hT = (hF - hIniDate) / 3600000;
             c += "\n\n--- RESUMEN PARA FACTURACIÓN Y EFICIENCIA ---\n";
-            c += `DIRECCIONES TOTALES (Cobrables);${direccionesTotales};(Recogidas: ${contadorRecogidasUnicas} + Entregas: ${totalPedidos})\n`;
-            c += `TOTAL PEDIDOS (Entregas);${totalPedidos}\n`;
-            c += `EFICIENCIA DPH (Pedidos/Hora);${dph}\n`;
-            c += `TIEMPO MEDIO POR PEDIDO;${totalPedidos > 0 ? (totalMinPed/totalPedidos).toFixed(2) : 0} min\n`;
-            c += `TOTAL ESPERA ADJ. LOCAL (-5m);${totalMinEspL_Adj.toFixed(2)} min\n`;
-            c += `TOTAL ESPERA ADJ. CLIENTE (-5m);${totalMinEspC_Adj.toFixed(2)} min\n`;
+            c += `DIRECCIONES TOTALES (Cobrables);${contadorRecogidasUnicas + est.hist.length};(Recogidas: ${contadorRecogidasUnicas} + Entregas: ${est.hist.length})\n`;
+            c += `TOTAL PEDIDOS (Entregas);${est.hist.length}\n`;
+            c += `EFICIENCIA DPH (Pedidos/Hora);${(est.hist.length / hT).toFixed(2)}\n`;
             c += `TOTAL EXCESOS DETECTADOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
             c += `DISTANCIA TOTAL RUTA;${totalKmCalc.toFixed(2)} km\n`;
 
-            // --- LÓGICA DE DESCARGA Y NOMBRE DE ARCHIVO ---
-            // --- LÓGICA DE EXPORTACIÓN INTELIGENTE (Share o Download) ---
-            const fechaArchivo = hIniDate.toISOString().slice(0, 10);
-            const nombreFinal = `${fechaArchivo}_${est.turno || '01'}_registro.csv`;
+            const fAr = hIniDate.toISOString().slice(0, 10);
+            const nF = `${fAr}_${est.turno}_registro.csv`;
             const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
-            
-            // Creamos un objeto de archivo real para poder compartirlo
-            const archivo = new File([blob], nombreFinal, { type: 'text/csv' });
+            const archivo = new File([blob], nF, { type: 'text/csv' });
 
-            // 1. Intentamos usar el menú de "Compartir" (Selector de destino en móvil)
             if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
                 try {
-                    await navigator.share({
-                        files: [archivo],
-                        title: 'Auditoría de Jornada',
-                        text: `Reporte Turno ${est.turno} - ${fechaExcel}`
-                    });
-                    // Si llega aquí, es que elegiste destino correctamente
+                    await navigator.share({ files: [archivo], title: 'Auditoría', text: `Turno ${est.turno} - ${fechaHoy}` });
                     activarModoReset();
-                } catch (err) {
-                    // Si cancelas el menú de compartir, no hacemos nada para que no se pierdan los datos
-                    btn.disabled = false;
-                    btn.innerText = "Reintentar Exportar 🛰️";
-                }
+                } catch (err) { btn.disabled = false; btn.innerText = "Reintentar Exportar 🛰️"; }
             } else {
-                // 2. Plan B: Descarga tradicional (si el navegador no soporta Share, como en algunos PCs)
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = nombreFinal;
-                link.click();
-                activarModoReset();
+                const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = nF; link.click(); activarModoReset();
             }
         }
 
         function activarModoReset() {
-            const btn = document.getElementById('btnExportar');
-            btn.disabled = false;
+            const btn = document.getElementById('btnExportar'); btn.disabled = false;
             btn.onclick = () => { 
                 if(confirm("¿Finalizar jornada y limpiar mochila?")) {
-                    // Solo borramos los datos del turno actual y el deshacer
-                    localStorage.removeItem('auditor_v7.3'); 
-                    localStorage.removeItem('pila_undo_v7.3'); 
-                    location.reload(); // Recarga la app para el siguiente turno
+                    localStorage.removeItem('auditor_v7.3'); localStorage.removeItem('pila_undo_v7.3'); location.reload(); 
                 }
             };
-            btn.innerText = "🚨 REINICIAR APP";
-            btn.classList.replace('btn-primary', 'btn-danger');
+            btn.innerText = "🚨 REINICIAR APP"; btn.classList.replace('btn-primary', 'btn-danger');
             document.getElementById('msg-seguridad').innerHTML = "<strong>¡EXPORTADO!</strong> Memoria lista para el siguiente turno.";
         }
 
-        window.onload = () => { 
-            if(est.f !== '_pre') navegar(est.f); 
-            generarCamposNombres(); 
-        };
+        window.onload = () => { if(est.f !== '_pre') navegar(est.f); };
     </script>
 </body>
 </html>
