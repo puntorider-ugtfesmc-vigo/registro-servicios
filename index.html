@@ -366,106 +366,70 @@
 
         async function exportarCSV() {
             const btn = document.getElementById('btnExportar');
-            btn.disabled = true;
-            btn.innerText = "Auditando Tiempos... 🛰️";
-
-            const hF = fixT();
-            const hIniDate = new Date(est.hIni);
-            const fechaExcel = hIniDate.toLocaleDateString('es-ES');
-            const fechaArchivo = hIniDate.toISOString().slice(0, 10); 
-            
+            btn.disabled = true; btn.innerText = "Sellanado Auditoría Final... 🛰️";
+            const hF = fixT(); const hIniDate = new Date(est.hIni);
+            const fechaHoy = hIniDate.toLocaleDateString();
+            const fechaArchivo = hIniDate.toISOString().slice(0, 10);
             const kmF = parseFloat(document.getElementById('kmF').value) || 0;
             const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
             
             const calcularMetricasTiempo = (ms, descuentoMin = 0) => {
-                let msFinal = ms - (descuentoMin * 60000);
-                if (msFinal < 0) msFinal = 0;
+                let msFinal = ms - (descuentoMin * 60000); if (msFinal < 0) msFinal = 0;
                 const totalSeg = Math.floor(msFinal / 1000);
-                const h = Math.floor(totalSeg / 3600).toString().padStart(2, '0');
-                const m = Math.floor((totalSeg % 3600) / 60).toString().padStart(2, '0');
-                const s = (totalSeg % 60).toString().padStart(2, '0');
-                return { reloj: `${h}:${m}:${s}`, decimal: (msFinal / 60000).toFixed(2) };
+                return { reloj: `${Math.floor(totalSeg/3600).toString().padStart(2,'0')}:${Math.floor((totalSeg%3600)/60).toString().padStart(2,'0')}:${(totalSeg%60).toString().padStart(2,'0')}`, decimal: (msFinal / 60000).toFixed(2) };
             };
 
-            let totalKmCalc = 0;
-            let totalMinEspL_Adj = 0;
-            let totalMinEspC_Adj = 0;
-            let totalMinPed = 0;
-            let totalExcP = 0, totalExcV = 0;
-            let contadorRecogidasUnicas = 0;
-            let ultHRec = null;
-
+            let totalKmCalc = 0, totalMinEspL_Adj = 0, totalMinEspC_Adj = 0, totalMinPed = 0, totalExcP = 0, totalExcV = 0, contadorRecogidasUnicas = 0, ultHRec = null;
             const dTurno = calcularMetricasTiempo(hF - hIniDate);
 
-            let c = "\uFEFFReporte de Jornada;Fecha;" + fechaExcel + ";Inicio;" + fmtH(est.hIni) + ";Fin;" + fmtH(hF) + ";Min_Turno;" + dTurno.decimal + "\n";
-            c += ";Turno;" + (est.turno || "01") + ";KM_INI;" + est.kmI + ";KM_FIN;" + kmF + ";KM_TOTAL;" + (kmF - kmIn).toFixed(1) + "\n\n";
-            c += "ID;PEDIDO;H_ASIG;H_RECOG;T_ESP_L(Adj);MIN_ESP_L;H_LLEG_CLI;T_B;MIN_B;KM_B;T_ESP_C(Adj);MIN_ESP_C;H_FIN;MIN_TOT_P;KM_TOT_P;TIPO;LINK_DEST\n";
+            let c = "\uFEFFReporte de Jornada;Fecha;" + fechaHoy + ";Inicio;" + fmtH(est.hIni) + ";Fin;" + fmtH(hF) + ";Minutos_Turno;" + dTurno.decimal + "\n";
+            c += ";Turno;" + est.turno + ";KM_INICIO;" + est.kmI + ";KM_FIN;" + kmF + ";KM_TOTALES;" + (kmF - kmIn).toFixed(1) + "\n\n";
+            c += "ID;CLIENTE;H.ASIG;H.LLEG.LOCAL;T_TRAMO_A;MIN_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;H.LLEG.CLIENTE;T_TRAMO_B;MIN_B;KM_B;T_ESPERA_C(Adj);MIN_ESP_C;H.FIN;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED;TIPO_CALCULO;LINK_ORIGEN;LINK_DESTINO\n";
 
             for (let i = 0; i < est.hist.length; i++) {
                 const p = est.hist[i];
+                const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
                 const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
                 const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
                 const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
-                const tTo = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
-
+                const tTot = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
                 if (p.hRec !== ultHRec) { contadorRecogidasUnicas++; ultHRec = p.hRec; }
+                let rutaA = (i === 0 || p.hRec !== est.hist[i-1].hRec) ? await obtenerDistanciaRuta(p.coordAsig, p.coordLlegL) : { km: "0.00" };
                 let origenB = (i > 0 && p.hRec === est.hist[i-1].hRec) ? est.hist[i-1].coordLlegC : p.coordRec;
                 const rutaB = await obtenerDistanciaRuta(origenB, p.coordLlegC);
-
-                totalKmCalc += parseFloat(rutaB.km); 
-                totalMinEspL_Adj += parseFloat(tEL.decimal); 
-                totalMinEspC_Adj += parseFloat(tEC.decimal); 
-                totalMinPed += parseFloat(tTo.decimal); 
-                totalExcP += (p.excP || 0); 
-                totalExcV += (p.excV || 0);
-
-                // CORRECCIÓN LINK: Eliminado el "0{" y puesto el "$"
-                const lD = p.coordLlegC.lat ? `https://www.google.com/maps?q=${p.coordLlegC.lat},${p.coordLlegC.lng}` : "N/R";
-
-                c += `${p.idPed};${p.cliente};${fmtH(p.hAsig)};${fmtH(p.hRec)};${tEL.reloj};${tEL.decimal};${fmtH(p.hLlegC)};${tB.reloj};${tB.decimal};${rutaB.km};${tEC.reloj};${tEC.decimal};${fmtH(p.hFin)};${tTo.decimal};${rutaB.km};${rutaB.tipo};${lD}\n`;
+                const kmTotPed = (parseFloat(rutaA.km) + parseFloat(rutaB.km)).toFixed(2);
+                totalKmCalc += parseFloat(kmTotPed); totalMinEspL_Adj += parseFloat(tEL.decimal); totalMinEspC_Adj += parseFloat(tEC.decimal); totalMinPed += parseFloat(tTot.decimal); totalExcP += (p.excP || 0); totalExcV += (p.excV || 0);
+                
+                const lOrg = origenB.lat ? `https://www.google.com/maps?q=${origenB.lat},${origenB.lng}` : "N/R";
+                const lDest = p.coordLlegC.lat ? `https://www.google.com/maps?q=${p.coordLlegC.lat},${p.coordLlegC.lng}` : "N/R";
+                
+                c += `${p.idPed};${p.cliente};${fmtH(p.hAsig)};${fmtH(p.hLlegL)};${tA.reloj};${tA.decimal};${rutaA.km};${fmtH(p.hRec)};${tEL.reloj};${tEL.decimal};${fmtH(p.hLlegC)};${tB.reloj};${tB.decimal};${rutaB.km};${tEC.reloj};${tEC.decimal};${fmtH(p.hFin)};${tTot.reloj};${tTot.decimal};${kmTotPed};${rutaB.tipo};${lOrg};${lDest}\n`;
             }
 
-            const horasTurno = (hF - hIniDate) / 3600000;
-            c += "\n\n--- RESUMEN ---\n";
-            c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
-            c += `DPH;${(est.hist.length / horasTurno).toFixed(2)}\n`;
-            c += `DISTANCIA;${totalKmCalc.toFixed(2)} km\n`;
+            const hT = (hF - hIniDate) / 3600000;
+            c += "\n\n--- RESUMEN PARA FACTURACIÓN Y EFICIENCIA ---\n";
+            c += `DIRECCIONES TOTALES (Cobrables);${contadorRecogidasUnicas + est.hist.length};(Recogidas: ${contadorRecogidasUnicas} + Entregas: ${est.hist.length})\n`;
+            c += `TOTAL PEDIDOS (Entregas);${est.hist.length}\n`;
+            c += `EFICIENCIA DPH (Pedidos/Hora);${(est.hist.length / hT).toFixed(2)}\n`;
+            c += `TOTAL EXCESOS DETECTADOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
+            c += `DISTANCIA TOTAL RUTA;${totalKmCalc.toFixed(2)} km\n`;
 
-            const nombreArchivoFinal = `${fechaArchivo}_${est.turno}_registro.csv`;
+            const nF = `${fechaArchivo}_${est.turno}_registro.csv`;
             const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
-            const archivoFile = new File([blob], nombreArchivoFinal, { type: 'text/csv' });
+            const archivo = new File([blob], nF, { type: 'text/csv' });
 
-            if (navigator.canShare && navigator.canShare({ files: [archivoFile] })) {
+            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
                 try {
-                    await navigator.share({
-                        files: [archivoFile],
-                        title: nombreArchivoFinal,
-                        text: nombreArchivoFinal // <--- BLINDAJE DRIVE: Ahora el texto es el nombre
+                    await navigator.share({ 
+                        files: [archivo], 
+                        title: nF, 
+                        text: nF 
                     });
                     activarModoReset();
-                } catch (err) {
-                    btn.disabled = false;
-                    btn.innerText = "Reintentar Exportar 🛰️";
-                }
+                } catch (err) { btn.disabled = false; btn.innerText = "Reintentar Exportar 🛰️"; }
             } else {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = nombreArchivoFinal;
-                link.click();
-                activarModoReset();
+                const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = nF; link.click(); activarModoReset();
             }
-        }
-        function activarModoReset() {
-            const btn = document.getElementById('btnExportar'); btn.disabled = false;
-            btn.onclick = () => { 
-                if(confirm("¿Deseas finalizar la jornada y resetear la mochila?")) { 
-                    localStorage.removeItem('auditor_v7.3'); 
-                    localStorage.removeItem('pila_undo_v7.3'); 
-                    location.reload(); 
-                } 
-            };
-            btn.innerText = "🚨 REINICIAR APP"; btn.classList.replace('btn-primary', 'btn-danger');
-            document.getElementById('msg-seguridad').innerHTML = "<strong>¡EXPORTADO!</strong> Ya puedes borrar.";
         }
 
         window.onload = () => { if(est.f !== '_pre') navegar(est.f); };
