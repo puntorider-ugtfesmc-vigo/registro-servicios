@@ -372,7 +372,7 @@
             const hF = fixT();
             const hIniDate = new Date(est.hIni);
             const fechaExcel = hIniDate.toLocaleDateString('es-ES');
-            const fechaArchivo = hIniDate.toISOString().slice(0, 10); // Formato AAAA-MM-DD
+            const fechaArchivo = hIniDate.toISOString().slice(0, 10); 
             
             const kmF = parseFloat(document.getElementById('kmF').value) || 0;
             const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
@@ -397,17 +397,15 @@
 
             const dTurno = calcularMetricasTiempo(hF - hIniDate);
 
-            // --- CABECERA CSV (B1=Fecha, B2=Turno) ---
             let c = "\uFEFFReporte de Jornada;Fecha;" + fechaExcel + ";Inicio;" + fmtH(est.hIni) + ";Fin;" + fmtH(hF) + ";Min_Turno;" + dTurno.decimal + "\n";
             c += ";Turno;" + (est.turno || "01") + ";KM_INI;" + est.kmI + ";KM_FIN;" + kmF + ";KM_TOTAL;" + (kmF - kmIn).toFixed(1) + "\n\n";
-            
             c += "ID;PEDIDO;H_ASIG;H_RECOG;T_ESP_L(Adj);MIN_ESP_L;H_LLEG_CLI;T_B;MIN_B;KM_B;T_ESP_C(Adj);MIN_ESP_C;H_FIN;MIN_TOT_P;KM_TOT_P;TIPO;LINK_DEST\n";
 
             for (let i = 0; i < est.hist.length; i++) {
                 const p = est.hist[i];
-                const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5); // 5m cortesía
+                const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
                 const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
-                const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5); // 5m cortesía
+                const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
                 const tTo = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
 
                 if (p.hRec !== ultHRec) { contadorRecogidasUnicas++; ultHRec = p.hRec; }
@@ -421,19 +419,18 @@
                 totalExcP += (p.excP || 0); 
                 totalExcV += (p.excV || 0);
 
+                // CORRECCIÓN LINK: Eliminado el "0{" y puesto el "$"
                 const lD = p.coordLlegC.lat ? `https://www.google.com/maps?q=${p.coordLlegC.lat},${p.coordLlegC.lng}` : "N/R";
 
                 c += `${p.idPed};${p.cliente};${fmtH(p.hAsig)};${fmtH(p.hRec)};${tEL.reloj};${tEL.decimal};${fmtH(p.hLlegC)};${tB.reloj};${tB.decimal};${rutaB.km};${tEC.reloj};${tEC.decimal};${fmtH(p.hFin)};${tTo.decimal};${rutaB.km};${rutaB.tipo};${lD}\n`;
             }
 
             const horasTurno = (hF - hIniDate) / 3600000;
-            c += "\n\n--- RESUMEN DE AUDITORÍA ---\n";
-            c += `DIRECCIONES TOTALES;${contadorRecogidasUnicas + est.hist.length};(Rec:${contadorRecogidasUnicas}+Ent:${est.hist.length})\n`;
-            c += `EFICIENCIA DPH;${(est.hist.length / horasTurno).toFixed(2)};Pedidos/Hora\n`;
-            c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso:${totalExcP}/Vol:${totalExcV})\n`;
-            c += `DISTANCIA TOTAL;${totalKmCalc.toFixed(2)};km\n`;
+            c += "\n\n--- RESUMEN ---\n";
+            c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
+            c += `DPH;${(est.hist.length / horasTurno).toFixed(2)}\n`;
+            c += `DISTANCIA;${totalKmCalc.toFixed(2)} km\n`;
 
-            // --- LÓGICA DE EXPORTACIÓN CON NOMBRE BLINDADO ---
             const nombreArchivoFinal = `${fechaArchivo}_${est.turno}_registro.csv`;
             const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
             const archivoFile = new File([blob], nombreArchivoFinal, { type: 'text/csv' });
@@ -443,7 +440,7 @@
                     await navigator.share({
                         files: [archivoFile],
                         title: nombreArchivoFinal,
-                        text: `Registro de Auditoría Turno ${est.turno}`
+                        text: nombreArchivoFinal // <--- BLINDAJE DRIVE: Ahora el texto es el nombre
                     });
                     activarModoReset();
                 } catch (err) {
@@ -458,7 +455,6 @@
                 activarModoReset();
             }
         }
-
         function activarModoReset() {
             const btn = document.getElementById('btnExportar'); btn.disabled = false;
             btn.onclick = () => { 
