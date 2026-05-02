@@ -473,6 +473,8 @@
             let totalMinPed = 0;
             let contadorRecogidasUnicas = 0;
             let ultHRec = null;
+            let totalExcP = 0;
+            let totalExcV = 0;
 
             const dTurno = calcularMetricasTiempo(hF - hIniDate);
             const horasTurno = ((hF - hIniDate) / 3600000);
@@ -483,7 +485,8 @@
             c += `KM_INI;${est.kmI};KM_FIN;${kmF};KM_TOTAL_REG;${(kmF - kmIn).toFixed(1)}\n`;
             c += `\n`;
 
-            c += "ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\n";
+            // Cabecera con EXC_PESO y EXC_VOL añadidos tras la espera en local
+            c += "ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\n";
 
             for (let i = 0; i < est.hist.length; i++) {
                 const p = est.hist[i];
@@ -521,6 +524,8 @@
                 totalMinEspLAdj += parseFloat(tEL.decimal);
                 totalMinEspCAdj += parseFloat(tEC.decimal);
                 totalMinPed += parseFloat(tTot.decimal);
+                totalExcP += (p.excP || 0);
+                totalExcV += (p.excV || 0);
 
                 c += [
                     p.idPed || "",
@@ -537,6 +542,8 @@
                     fmtH(p.hRec),
                     tEL.reloj,
                     tEL.decimal,
+                    (p.excP || 0),   // EXC_PESO
+                    (p.excV || 0),   // EXC_VOL
                     fmtH(p.hLlegC),
                     fmtCoord(p.coordLlegC),
                     tB.reloj,
