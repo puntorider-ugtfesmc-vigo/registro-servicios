@@ -122,9 +122,18 @@
         <div id="p4" class="hidden text-center">
             <h3 class="fw-bold mb-4">Cierre de Auditoría</h3>
             <div class="card p-4 border-0 shadow rounded-4 mb-4">
-                <div class="mb-5" id="wrapper-km-final"><label class="small text-muted fw-bold text-uppercase mb-2 d-block">Kilómetros al finalizar:</label><input type="number" id="kmF" class="form-control form-control-lg text-center fw-bold py-3" style="font-size: 2rem;" oninput="validarKmFinales()"></div>
-                <button id="btnExportar" onclick="exportarCSV()" class="btn btn-massive btn-primary shadow-lg mb-4">Generar y Exportar CSV</button>
-                <div id="msg-seguridad" class="alert alert-secondary py-3 small m-0 border-0 rounded-3"><p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> El sistema solo permitirá el borrado tras detectar una exportación exitosa.</p></div>
+    <div class="mb-5" id="wrapper-km-final">
+        <label class="small text-muted fw-bold text-uppercase mb-2 d-block">Kilómetros al finalizar:</label>
+        <input type="number" id="kmF" class="form-control form-control-lg text-center fw-bold py-3" style="font-size: 2rem;" oninput="validarKmFinales()">
+    </div>
+
+    <div id="aviso-km" class="alert alert-warning py-3 small border-0 rounded-3 mb-4"></div>
+
+    <button id="btnExportar" onclick="exportarCSV()" class="btn btn-massive btn-primary shadow-lg mb-4">Generar y Exportar CSV</button>
+
+    <div id="msg-seguridad" class="alert alert-secondary py-3 small m-0 border-0 rounded-3">
+        <p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> El sistema solo permitirá el borrado tras detectar una exportación exitosa.</p>
+    </div>
             </div>
             <button onclick="navegar(1)" class="btn btn-link text-muted fw-bold text-decoration-none">Volver a la mochila</button>
         </div>
@@ -253,9 +262,14 @@
             registrarPuntoRetorno(); 
             est.hUlt = fixT(); 
             
-            // --- LÓGICA DE AUTO-INCREMENTO INTELIGENTE ---
-            const hoy = new Date().toISOString().slice(0, 10); 
-            let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || { fecha: hoy, ultimoTurno: 0 };
+            // --- LÓGICA DE AUTO-INCREMENTO INTELIGENTE (FECHA LOCAL) ---
+const ahora = new Date();
+const yTurno = ahora.getFullYear();
+const mTurno = String(ahora.getMonth() + 1).padStart(2, '0');
+const dTurno = String(ahora.getDate()).padStart(2, '0');
+const hoy = `${yTurno}-${mTurno}-${dTurno}`;
+
+let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || { fecha: hoy, ultimoTurno: 0 };
 
             if (persistencia.fecha !== hoy) {
                 persistencia.fecha = hoy;
@@ -391,9 +405,47 @@
         function registrarPuntoRetorno() { pilaUndo.push(JSON.parse(JSON.stringify(est))); if(pilaUndo.length > 20) pilaUndo.shift(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); }
         function deshacer() { if(pilaUndo.length > 0) { est = pilaUndo.pop(); clearInterval(timer); navegar(est.f, true); } }
         function saveState() { localStorage.setItem('auditor_v7.3', JSON.stringify(est)); }
-        function prepararPantallaFinal() { if (est.kmI !== "N/R") validarKmFinales(); }
-        function validarKmFinales() { const val = parseFloat(document.getElementById('kmF').value); document.getElementById('btnExportar').disabled = (est.kmI !== "N/R" && (isNaN(val) || val < est.kmI)); }
+        function prepararPantallaFinal() {
+    const aviso = document.getElementById('aviso-km');
 
+    if (est.kmI === "N/R") {
+        if (aviso) {
+            aviso.className = "alert alert-info py-3 small border-0 rounded-3 mb-4";
+            aviso.innerHTML = "<strong>ℹ️ KM no registrado al inicio.</strong> Puedes exportar sin control de kilometraje.";
+        }
+        return;
+    }
+
+    if (aviso) {
+        aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
+        aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Si te equivocaste al inicio, ajusta manualmente el KM final para poder exportar con el dato corregido.`;
+    }
+
+    validarKmFinales();
+}
+        function validarKmFinales() {
+    const val = parseFloat(document.getElementById('kmF').value);
+    const btn = document.getElementById('btnExportar');
+    const aviso = document.getElementById('aviso-km');
+
+    if (est.kmI === "N/R") {
+        btn.disabled = false;
+        return;
+    }
+
+    const invalido = isNaN(val) || val < est.kmI;
+    btn.disabled = invalido;
+
+    if (aviso) {
+        if (invalido) {
+            aviso.className = "alert alert-danger py-3 small border-0 rounded-3 mb-4";
+            aviso.innerHTML = `<strong>⚠️ Revisión necesaria:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. El KM final debe ser igual o superior para exportar. Si el error estuvo al inicio, corrige manualmente el valor final usando esa referencia.`;
+        } else {
+            aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
+            aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Revisa que el valor final sea coherente antes de exportar.`;
+        }
+    }
+}
         async function obtenerDistanciaRuta(origen, destino) {
             if (!origen.lat || !destino.lat) return { km: "0.00", tipo: "Sin GPS" };
             try {
@@ -416,7 +468,10 @@
             const hF = fixT();
             const hIniDate = new Date(est.hIni);
             const fechaHoy = hIniDate.toLocaleDateString();
-            const fechaArchivo = hIniDate.toISOString().slice(0, 10);
+            const y = hIniDate.getFullYear();
+            const m = String(hIniDate.getMonth() + 1).padStart(2, '0');
+            const d = String(hIniDate.getDate()).padStart(2, '0');
+            const fechaArchivo = `${y}-${m}-${d}`;
             const kmF = parseFloat(document.getElementById('kmF').value) || 0;
             const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
 
