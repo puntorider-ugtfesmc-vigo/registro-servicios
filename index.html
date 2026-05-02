@@ -221,15 +221,36 @@
 
     // 3) H_CLI_APP: buscamos algo tipo "Completado a las 23:30"
     let hCliApp = null;
-    for (const linea of lineas) {
-        const mHora = linea.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
-        if (mHora && mHora[1]) {
-            const hoy = new Date();
-            const [hh, mm] = mHora[1].split(":").map(Number);
-            hCliApp = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), hh, mm, 0, 0);
-            break;
+for (const linea of lineas) {
+    const mHora = linea.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
+    if (mHora && mHora[1]) {
+        const [hh, mm] = mHora[1].split(":").map(Number);
+
+        // Base: el mismo día en que llegaste al cliente
+        const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
+
+        hCliApp = new Date(
+            base.getFullYear(),
+            base.getMonth(),
+            base.getDate(),
+            hh,
+            mm,
+            0,
+            0
+        );
+
+        // Si la hora de la app queda "demasiado atrás" respecto a la llegada al cliente,
+        // asumimos que pertenece al día siguiente (cruce de medianoche)
+        if (est.entAct && est.entAct.hLlegC) {
+            const llegada = new Date(est.entAct.hLlegC);
+            if (hCliApp < llegada) {
+                hCliApp.setDate(hCliApp.getDate() + 1);
+            }
         }
+
+        break;
     }
+}
 
     // Guardamos en campos visibles y en el estado temporal de la entrega
     document.getElementById('inp-id').value = newId;
@@ -405,6 +426,33 @@ let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || {
         function registrarPuntoRetorno() { pilaUndo.push(JSON.parse(JSON.stringify(est))); if(pilaUndo.length > 20) pilaUndo.shift(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); }
         function deshacer() { if(pilaUndo.length > 0) { est = pilaUndo.pop(); clearInterval(timer); navegar(est.f, true); } }
         function saveState() { localStorage.setItem('auditor_v7.3', JSON.stringify(est)); }
+        function activarModoReset() {
+    localStorage.removeItem('auditor_v7.3');
+    localStorage.removeItem('pila_undo_v7.3');
+
+    est = {
+        f: '_pre',
+        hIni: null,
+        kmI: 0,
+        turno: '01',
+        hAsig: null,
+        hUlt: null,
+        bandeja: [],
+        hist: [],
+        logHitos: []
+    };
+
+    pilaUndo = [];
+    est.entAct = null;
+    clearInterval(timer);
+
+    document.getElementById('kmI').value = 0;
+    document.getElementById('kmF').value = '';
+    document.getElementById('usarKM').checked = true;
+    document.getElementById('kmI').disabled = false;
+
+    navegar('_pre');
+}
         function prepararPantallaFinal() {
     const aviso = document.getElementById('aviso-km');
 
