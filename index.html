@@ -567,6 +567,7 @@
             c += `U_Turno;${horasTurno.toFixed(2)}\n`;
             c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
             c += `Pedidos/Hora;${horasTurno > 0 ? (est.hist.length / horasTurno).toFixed(2) : "0.00"}\n`;
+            c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
             c += `DISTANCIA TRAMO A;${totalKmA.toFixed(2)} km\n`;
             c += `DISTANCIA TRAMO B;${totalKmB.toFixed(2)} km\n`;
             c += `DISTANCIA TOTAL;${(totalKmA + totalKmB).toFixed(2)} km\n`;
