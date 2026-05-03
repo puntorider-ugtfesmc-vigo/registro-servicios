@@ -814,7 +814,17 @@
 
                 let guardadoFirme = false;
 
-                if (window.showSaveFilePicker) {
+                const supportsFileSystemAccess =
+    'showSaveFilePicker' in window &&
+    (() => {
+        try {
+            return window.self === window.top;
+        } catch {
+            return false;
+        }
+    })();
+
+if (supportsFileSystemAccess) {
                     try {
                         const handle = await window.showSaveFilePicker({
                             suggestedName: nF,
