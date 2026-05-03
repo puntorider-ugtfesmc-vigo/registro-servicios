@@ -209,7 +209,7 @@
                 <p id="export-modal-msg" class="card-text small mb-4"></p>
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-outline-secondary" onclick="cerrarModalExport()">Volver a Exportar</button>
-                    <button type="button" class="btn btn-danger" onclick="reiniciarTrasExport()">Reiniciar APP</button>
+                    <button type="button" id="btn-reset-app" class="btn btn-danger" onclick="reiniciarTrasExport()">Reiniciar APP</button>
                 </div>
             </div>
         </div>
@@ -220,8 +220,9 @@
         let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, turno:'01', hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
         let pilaUndo = JSON.parse(localStorage.getItem('pila_undo_v7.3')) || [];
         let timer;
-        const fixT = () => new Date();
-        const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
+let ultimoGuardadoFirme = false;
+const fixT = () => new Date();
+const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
 
         function bloquearUI(texto = "Procesando...") {
             const lock = document.getElementById('ui-lock');
@@ -237,14 +238,18 @@
             lock.classList.add('hidden');
         }
 
-        function mostrarModalExport(titulo, mensaje) {
-            const bd = document.getElementById('export-modal-backdrop');
-            const md = document.getElementById('export-modal');
-            document.getElementById('export-modal-title').innerText = titulo;
-            document.getElementById('export-modal-msg').innerText = mensaje;
-            bd.classList.remove('hidden');
-            md.classList.remove('hidden');
-        }
+        function mostrarModalExport(titulo, mensaje, permitirReset = false) {
+    const bd = document.getElementById('export-modal-backdrop');
+    const md = document.getElementById('export-modal');
+
+    ultimoGuardadoFirme = permitirReset;
+
+    document.getElementById('export-modal-title').innerText = titulo;
+    document.getElementById('export-modal-msg').innerText = mensaje;
+
+    bd.classList.remove('hidden');
+    md.classList.remove('hidden');
+}
 
         function cerrarModalExport() {
             document.getElementById('export-modal-backdrop').classList.add('hidden');
@@ -252,9 +257,32 @@
         }
 
         function reiniciarTrasExport() {
-            cerrarModalExport();
+    if (ultimoGuardadoFirme) {
+        cerrarModalExport();
+        bloquearUI("Reiniciando APP...");
+        setTimeout(() => {
             activarModoReset();
-        }
+            desbloquearUI();
+        }, 250);
+        return;
+    }
+
+    const confirmado = confirm(
+        "⚠️ ATENCIÓN ANTES DE REINICIAR\n\n" +
+        "El sistema no ha podido confirmar físicamente que el CSV exista en el destino final.\n" +
+        "Antes de reiniciar, comprueba manualmente el archivo.\n\n" +
+        "¿Deseas reiniciar igualmente?"
+    );
+
+    if (!confirmado) return;
+
+    cerrarModalExport();
+    bloquearUI("Reiniciando APP...");
+    setTimeout(() => {
+        activarModoReset();
+        desbloquearUI();
+    }, 250);
+}
 
         const obtenerGPS = () => {
             return new Promise((resolve) => {
@@ -887,7 +915,7 @@ if (supportsFileSystemAccess) {
                 desbloquearUI();
                 btn.disabled = false;
                 btn.innerText = "Generar y Exportar CSV";
-                mostrarModalExport(titulo, mensaje);
+                mostrarModalExport(titulo, mensaje, guardadoFirme);
             }
         }
 
