@@ -34,6 +34,53 @@
         .order-selector { display: flex; gap: 8px; margin-bottom: 20px; }
         .order-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #eee; background: #f8f9fa; font-weight: 800; font-size: 1.2rem; transition: 0.2s; }
         .order-btn.active { background: var(--info); color: white; border-color: var(--info); transform: scale(1.05); }
+
+        /* Overlay de bloqueo global */
+        #ui-lock {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+        }
+        .ui-lock-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(120, 120, 120, 0.45);
+            backdrop-filter: grayscale(1) blur(1px);
+        }
+        .ui-lock-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(44, 62, 80, 0.92);
+            color: white;
+            padding: 22px 28px;
+            border-radius: 18px;
+            text-align: center;
+            min-width: 180px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            font-size: 0.95rem;
+        }
+
+        /* Modal resultado exportación */
+        #export-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 9998;
+        }
+        #export-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        #export-modal .card {
+            max-width: 420px;
+            width: 90%;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +101,7 @@
                     <label class="form-check-label fw-bold fs-5">Registrar Kilometraje</label>
                 </div>
                 <div class="mb-4">
-                    <label class="small text-muted fw-bold mb-2 text-uppercase">Lectura del Cuentakilómetros:</label>
+                    <label class="small text-muted fw-bold text-uppercase mb-2">Lectura del Cuentakilómetros:</label>
                     <input type="number" id="kmI" class="form-control form-control-lg py-3" value="0" style="font-size: 1.5rem; font-weight: 700;">
                 </div>
                 <button onclick="comenzarTurno()" class="btn btn-massive btn-success shadow">¡¡A rodar!!!!</button>
@@ -122,18 +169,18 @@
         <div id="p4" class="hidden text-center">
             <h3 class="fw-bold mb-4">Cierre de Auditoría</h3>
             <div class="card p-4 border-0 shadow rounded-4 mb-4">
-    <div class="mb-5" id="wrapper-km-final">
-        <label class="small text-muted fw-bold text-uppercase mb-2 d-block">Kilómetros al finalizar:</label>
-        <input type="number" id="kmF" class="form-control form-control-lg text-center fw-bold py-3" style="font-size: 2rem;" oninput="validarKmFinales()">
-    </div>
+                <div class="mb-5" id="wrapper-km-final">
+                    <label class="small text-muted fw-bold text-uppercase mb-2 d-block">Kilómetros al finalizar:</label>
+                    <input type="number" id="kmF" class="form-control form-control-lg text-center fw-bold py-3" style="font-size: 2rem;" oninput="validarKmFinales()">
+                </div>
 
-    <div id="aviso-km" class="alert alert-warning py-3 small border-0 rounded-3 mb-4"></div>
+                <div id="aviso-km" class="alert alert-warning py-3 small border-0 rounded-3 mb-4"></div>
 
-    <button id="btnExportar" onclick="exportarCSV()" class="btn btn-massive btn-primary shadow-lg mb-4">Generar y Exportar CSV</button>
+                <button id="btnExportar" onclick="exportarCSV()" class="btn btn-massive btn-primary shadow-lg mb-4">Generar y Exportar CSV</button>
 
-    <div id="msg-seguridad" class="alert alert-secondary py-3 small m-0 border-0 rounded-3">
-        <p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> El sistema solo permitirá el borrado tras detectar una exportación exitosa.</p>
-    </div>
+                <div id="msg-seguridad" class="alert alert-secondary py-3 small m-0 border-0 rounded-3">
+                    <p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> El sistema solo permitirá el borrado tras detectar una exportación exitosa.</p>
+                </div>
             </div>
             <button onclick="navegar(1)" class="btn btn-link text-muted fw-bold text-decoration-none">Volver a la mochila</button>
         </div>
@@ -144,6 +191,30 @@
         </div>
     </div>
 
+    <!-- Overlay de bloqueo -->
+    <div id="ui-lock" class="hidden">
+        <div class="ui-lock-backdrop"></div>
+        <div class="ui-lock-box">
+            <div class="spinner-border text-light mb-3" role="status"></div>
+            <div id="ui-lock-text" class="fw-bold">Procesando...</div>
+        </div>
+    </div>
+
+    <!-- Modal resultado exportación -->
+    <div id="export-modal-backdrop" class="hidden"></div>
+    <div id="export-modal" class="hidden">
+        <div class="card border-0 shadow rounded-4">
+            <div class="card-body">
+                <h5 id="export-modal-title" class="card-title fw-bold mb-2">Resultado de la exportación</h5>
+                <p id="export-modal-msg" class="card-text small mb-4"></p>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary" onclick="cerrarModalExport()">Volver a Exportar</button>
+                    <button type="button" class="btn btn-danger" onclick="reiniciarTrasExport()">Reiniciar APP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ESTADO INICIAL
         let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, turno:'01', hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
@@ -151,6 +222,40 @@
         let timer;
         const fixT = () => new Date();
         const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
+
+        function bloquearUI(texto = "Procesando...") {
+            const lock = document.getElementById('ui-lock');
+            if (!lock) return;
+            lock.classList.remove('hidden');
+            const txt = document.getElementById('ui-lock-text');
+            if (txt) txt.innerText = texto;
+        }
+
+        function desbloquearUI() {
+            const lock = document.getElementById('ui-lock');
+            if (!lock) return;
+            lock.classList.add('hidden');
+        }
+
+        function mostrarModalExport(titulo, mensaje) {
+            const bd = document.getElementById('export-modal-backdrop');
+            const md = document.getElementById('export-modal');
+            document.getElementById('export-modal-title').innerText = titulo;
+            document.getElementById('export-modal-msg').innerText = mensaje;
+            bd.classList.remove('hidden');
+            md.classList.remove('hidden');
+        }
+
+        function cerrarModalExport() {
+            document.getElementById('export-modal-backdrop').classList.add('hidden');
+            document.getElementById('export-modal').classList.add('hidden');
+        }
+
+        function reiniciarTrasExport() {
+            cerrarModalExport();
+            activarModoReset();
+        }
+
         const obtenerGPS = () => {
             return new Promise((resolve) => {
                 if (!navigator.geolocation) return resolve({ lat: null, lng: null });
@@ -192,75 +297,61 @@
         }
 
         function autoFillEnt() {
-    const area = document.getElementById('smart-paste-ent');
-    const val = area.value.trim();
-    if (!val) return;
+            const area = document.getElementById('smart-paste-ent');
+            const val = area.value.trim();
+            if (!val) return;
 
-    // Dividir en líneas
-    const lineas = val.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+            const lineas = val.split(/\r?\n/).map(l => l.trim()).filter(l => l);
 
-    // 1) ID de pedido: sigue tu patrón actual
-    const idMatch = val.match(/Pedido\s+n\s*\.?\s*º\s*(\d+)/i);
-    if (!idMatch || !idMatch[1]) {
-        // Si no hay ID no seguimos (pero no borramos el texto por si quieres corregir)
-        document.getElementById('btn-fin-ent').disabled = true;
-        return;
-    }
-    const newId = idMatch[1];
-
-    if (est.hist.some(p => p.idPed === newId)) {
-        alert("🛑 ¡AVISO DE SEGURIDAD!\nPedido duplicado.");
-        area.value = "";
-        document.getElementById('inp-id').value = "";
-        document.getElementById('btn-fin-ent').disabled = true;
-        return;
-    }
-
-    // 2) PARTNER: asumimos que es la primera línea no vacía
-    const partnerTexto = lineas[0] || "";
-
-    // 3) H_CLI_APP: buscamos algo tipo "Completado a las 23:30"
-    let hCliApp = null;
-for (const linea of lineas) {
-    const mHora = linea.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
-    if (mHora && mHora[1]) {
-        const [hh, mm] = mHora[1].split(":").map(Number);
-
-        // Base: el mismo día en que llegaste al cliente
-        const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
-
-        hCliApp = new Date(
-            base.getFullYear(),
-            base.getMonth(),
-            base.getDate(),
-            hh,
-            mm,
-            0,
-            0
-        );
-
-        // Si la hora de la app queda "demasiado atrás" respecto a la llegada al cliente,
-        // asumimos que pertenece al día siguiente (cruce de medianoche)
-        if (est.entAct && est.entAct.hLlegC) {
-            const llegada = new Date(est.entAct.hLlegC);
-            if (hCliApp < llegada) {
-                hCliApp.setDate(hCliApp.getDate() + 1);
+            const idMatch = val.match(/Pedido\s+n\s*\.?\s*º\s*(\d+)/i);
+            if (!idMatch || !idMatch[1]) {
+                document.getElementById('btn-fin-ent').disabled = true;
+                return;
             }
+            const newId = idMatch[1];
+
+            if (est.hist.some(p => p.idPed === newId)) {
+                alert("🛑 ¡AVISO DE SEGURIDAD!\nPedido duplicado.");
+                area.value = "";
+                document.getElementById('inp-id').value = "";
+                document.getElementById('btn-fin-ent').disabled = true;
+                return;
+            }
+
+            const partnerTexto = lineas[0] || "";
+
+            let hCliApp = null;
+            for (const linea of lineas) {
+                const mHora = linea.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
+                if (mHora && mHora[1]) {
+                    const [hh, mm] = mHora[1].split(":").map(Number);
+                    const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
+                    hCliApp = new Date(
+                        base.getFullYear(),
+                        base.getMonth(),
+                        base.getDate(),
+                        hh,
+                        mm,
+                        0,
+                        0
+                    );
+                    if (est.entAct && est.entAct.hLlegC) {
+                        const llegada = new Date(est.entAct.hLlegC);
+                        if (hCliApp < llegada) {
+                            hCliApp.setDate(hCliApp.getDate() + 1);
+                        }
+                    }
+                    break;
+                }
+            }
+
+            document.getElementById('inp-id').value = newId;
+            document.getElementById('btn-fin-ent').disabled = false;
+
+            if (!est.entAct) est.entAct = {};
+            est.entAct.partner = partnerTexto;
+            est.entAct.hCliApp = hCliApp;
         }
-
-        break;
-    }
-}
-
-    // Guardamos en campos visibles y en el estado temporal de la entrega
-    document.getElementById('inp-id').value = newId;
-    document.getElementById('btn-fin-ent').disabled = false;
-
-    // Inyectar datos en la entrega activa
-    if (!est.entAct) est.entAct = {};
-    est.entAct.partner = partnerTexto;
-    est.entAct.hCliApp = hCliApp;
-}
 
         // NAVEGACIÓN Y ESTADO
         function navegar(fase, bypassReset = false) {
@@ -278,19 +369,25 @@ for (const linea of lineas) {
             saveState();
         }
 
-        function iniciarJornada() { registrarPuntoRetorno(); est.hIni = fixT(); est.hUlt = est.hIni; est.logHitos = [{ texto: "Inicio de Turno Oficial", hora: est.hIni }]; navegar(0); }
+        function iniciarJornada() {
+            registrarPuntoRetorno();
+            est.hIni = fixT();
+            est.hUlt = est.hIni;
+            est.logHitos = [{ texto: "Inicio de Turno Oficial", hora: est.hIni }];
+            navegar(0);
+        }
+
         function comenzarTurno() { 
             registrarPuntoRetorno(); 
             est.hUlt = fixT(); 
             
-            // --- LÓGICA DE AUTO-INCREMENTO INTELIGENTE (FECHA LOCAL) ---
-const ahora = new Date();
-const yTurno = ahora.getFullYear();
-const mTurno = String(ahora.getMonth() + 1).padStart(2, '0');
-const dTurno = String(ahora.getDate()).padStart(2, '0');
-const hoy = `${yTurno}-${mTurno}-${dTurno}`;
+            const ahora = new Date();
+            const yTurno = ahora.getFullYear();
+            const mTurno = String(ahora.getMonth() + 1).padStart(2, '0');
+            const dTurno = String(ahora.getDate()).padStart(2, '0');
+            const hoy = `${yTurno}-${mTurno}-${dTurno}`;
 
-let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || { fecha: hoy, ultimoTurno: 0 };
+            let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || { fecha: hoy, ultimoTurno: 0 };
 
             if (persistencia.fecha !== hoy) {
                 persistencia.fecha = hoy;
@@ -309,21 +406,31 @@ let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || {
         }
 
         async function registrarAsignacion() { 
-            registrarPuntoRetorno(); 
-            est.hAsig = fixT(); 
-            est.hUlt = est.hAsig; 
-            est.coordAsig = await obtenerGPS();
-            est.logHitos.push({ texto: "Pedido Asignado", hora: est.hAsig }); 
-            navegar(1); 
+            bloquearUI("Registrando asignación y GPS...");
+            try {
+                registrarPuntoRetorno(); 
+                est.hAsig = fixT(); 
+                est.hUlt = est.hAsig; 
+                est.coordAsig = await obtenerGPS();
+                est.logHitos.push({ texto: "Pedido Asignado", hora: est.hAsig }); 
+                navegar(1); 
+            } finally {
+                desbloquearUI();
+            }
         }
 
         async function registrarLlegadaLocal() { 
-            registrarPuntoRetorno(); 
-            est.hUlt = fixT(); 
-            est.coordLlegL = await obtenerGPS();
-            est.logHitos.push({ texto: "Llegada al Local", hora: est.hUlt }); 
-            limpiarFormularioRecogida(); 
-            navegar(2); 
+            bloquearUI("Registrando llegada al local...");
+            try {
+                registrarPuntoRetorno(); 
+                est.hUlt = fixT(); 
+                est.coordLlegL = await obtenerGPS();
+                est.logHitos.push({ texto: "Llegada al Local", hora: est.hUlt }); 
+                limpiarFormularioRecogida(); 
+                navegar(2); 
+            } finally {
+                desbloquearUI();
+            }
         }
 
         function confirmarFinTurno() {
@@ -333,62 +440,72 @@ let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || {
         }
 
         async function finRecogida() {
-            registrarPuntoRetorno();
-            const h = fixT();
-            const n = parseInt(document.getElementById('inp-n').value);
-            const ubicacionRecogida = await obtenerGPS();
-            for(let i=0; i<n; i++) {
-                const identificador = `${i+1}/${n}`;
-                est.bandeja.push({ 
-                    id: Date.now() + i, 
-                    partner: "Pdte...", 
-                    cliente: identificador,
-                    hAsig: est.hAsig, 
-                    hLlegL: est.hUlt, 
-                    hRec: h, 
-                    coordAsig: est.coordAsig,
-                    coordLlegL: est.coordLlegL,
-                    coordRec: ubicacionRecogida,
-                    idx: i+1, total: n, 
-                    excP: (i===0 && document.getElementById('chk-p').checked ? 1 : 0), 
-                    excV: (i===0 && document.getElementById('chk-v').checked ? 1 : 0), 
-                    obsRec: (i===0 ? document.getElementById('obs-rec').value : "") 
-                });
+            bloquearUI("Guardando recogida...");
+            try {
+                registrarPuntoRetorno();
+                const h = fixT();
+                const n = parseInt(document.getElementById('inp-n').value);
+                const ubicacionRecogida = await obtenerGPS();
+                for(let i=0; i<n; i++) {
+                    const identificador = `${i+1}/${n}`;
+                    est.bandeja.push({ 
+                        id: Date.now() + i, 
+                        partner: "Pdte...", 
+                        cliente: identificador,
+                        hAsig: est.hAsig, 
+                        hLlegL: est.hUlt, 
+                        hRec: h, 
+                        coordAsig: est.coordAsig,
+                        coordLlegL: est.coordLlegL,
+                        coordRec: ubicacionRecogida,
+                        idx: i+1, total: n, 
+                        excP: (i===0 && document.getElementById('chk-p').checked ? 1 : 0), 
+                        excV: (i===0 && document.getElementById('chk-v').checked ? 1 : 0), 
+                        obsRec: (i===0 ? document.getElementById('obs-rec').value : "") 
+                    });
+                }
+                est.logHitos.push({ texto: `Carga finalizada (${n} pedidos)`, hora: h });
+                est.hAsig = null; est.hUlt = h; clearInterval(timer); navegar(1);
+            } finally {
+                desbloquearUI();
             }
-            est.logHitos.push({ texto: `Carga finalizada (${n} pedidos)`, hora: h });
-            est.hAsig = null; est.hUlt = h; clearInterval(timer); navegar(1);
         }
 
         async function preEntrega(id) {
-            registrarPuntoRetorno();
-            est.entAct = est.bandeja.find(e => e.id === id);
-            est.entAct.hLlegC = fixT();
-            est.entAct.coordLlegC = await obtenerGPS();
-            est.logHitos.push({ texto: `Llegada portal: Pedido ${est.entAct.cliente}`, hora: est.entAct.hLlegC });
-            document.getElementById('tit-ent').innerText = `Entrega Pedido: ${est.entAct.cliente}`;
-            document.getElementById('smart-paste-ent').value = '';
-            document.getElementById('inp-id').value = '';
-            document.getElementById('obs-ent').value = '';
-            document.getElementById('btn-fin-ent').disabled = true;
-            navegar(3);
+            bloquearUI("Obteniendo posición del cliente...");
+            try {
+                registrarPuntoRetorno();
+                est.entAct = est.bandeja.find(e => e.id === id);
+                est.entAct.hLlegC = fixT();
+                est.entAct.coordLlegC = await obtenerGPS();
+                est.logHitos.push({ texto: `Llegada portal: Pedido ${est.entAct.cliente}`, hora: est.entAct.hLlegC });
+                document.getElementById('tit-ent').innerText = `Entrega Pedido: ${est.entAct.cliente}`;
+                document.getElementById('smart-paste-ent').value = '';
+                document.getElementById('inp-id').value = '';
+                document.getElementById('obs-ent').value = '';
+                document.getElementById('btn-fin-ent').disabled = true;
+                navegar(3);
+            } finally {
+                desbloquearUI();
+            }
         }
 
         function finEntrega() {
-    registrarPuntoRetorno();
-    const h = fixT();
-    est.hist.push({ 
-        ...est.entAct, 
-        hFin: h, 
-        idPed: document.getElementById('inp-id').value, 
-        obsEnt: document.getElementById('obs-ent').value 
-    });
-    est.logHitos.push({ texto: `Entrega cerrada`, hora: h });
-    est.bandeja = est.bandeja.filter(e => e.id !== est.entAct.id);
-    est.hUlt = h; 
-    est.entAct = null; 
-    clearInterval(timer);
-    navegar(1);
-}
+            registrarPuntoRetorno();
+            const h = fixT();
+            est.hist.push({ 
+                ...est.entAct, 
+                hFin: h, 
+                idPed: document.getElementById('inp-id').value, 
+                obsEnt: document.getElementById('obs-ent').value 
+            });
+            est.logHitos.push({ texto: `Entrega cerrada`, hora: h });
+            est.bandeja = est.bandeja.filter(e => e.id !== est.entAct.id);
+            est.hUlt = h; 
+            est.entAct = null; 
+            clearInterval(timer);
+            navegar(1);
+        }
 
         function renderMenu() {
             document.getElementById('txt-inicio').innerText = "INICIO: " + fmtH(est.hIni);
@@ -426,74 +543,84 @@ let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || {
         function registrarPuntoRetorno() { pilaUndo.push(JSON.parse(JSON.stringify(est))); if(pilaUndo.length > 20) pilaUndo.shift(); localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); }
         function deshacer() { if(pilaUndo.length > 0) { est = pilaUndo.pop(); clearInterval(timer); navegar(est.f, true); } }
         function saveState() { localStorage.setItem('auditor_v7.3', JSON.stringify(est)); }
+
         function activarModoReset() {
-    localStorage.removeItem('auditor_v7.3');
-    localStorage.removeItem('pila_undo_v7.3');
+            localStorage.removeItem('auditor_v7.3');
+            localStorage.removeItem('pila_undo_v7.3');
 
-    est = {
-        f: '_pre',
-        hIni: null,
-        kmI: 0,
-        turno: '01',
-        hAsig: null,
-        hUlt: null,
-        bandeja: [],
-        hist: [],
-        logHitos: []
-    };
+            est = {
+                f: '_pre',
+                hIni: null,
+                kmI: 0,
+                turno: '01',
+                hAsig: null,
+                hUlt: null,
+                bandeja: [],
+                hist: [],
+                logHitos: []
+            };
 
-    pilaUndo = [];
-    est.entAct = null;
-    clearInterval(timer);
+            pilaUndo = [];
+            est.entAct = null;
+            clearInterval(timer);
 
-    document.getElementById('kmI').value = 0;
-    document.getElementById('kmF').value = '';
-    document.getElementById('usarKM').checked = true;
-    document.getElementById('kmI').disabled = false;
+            const kmIEl = document.getElementById('kmI');
+            const kmFEl = document.getElementById('kmF');
+            const usarKMEl = document.getElementById('usarKM');
 
-    navegar('_pre');
-}
+            if (kmIEl) kmIEl.value = 0;
+            if (kmFEl) kmFEl.value = '';
+            if (usarKMEl) {
+                usarKMEl.checked = true;
+                kmIEl.disabled = false;
+            }
+
+            navegar('_pre');
+        }
+
         function prepararPantallaFinal() {
-    const aviso = document.getElementById('aviso-km');
+            const aviso = document.getElementById('aviso-km');
 
-    if (est.kmI === "N/R") {
-        if (aviso) {
-            aviso.className = "alert alert-info py-3 small border-0 rounded-3 mb-4";
-            aviso.innerHTML = "<strong>ℹ️ KM no registrado al inicio.</strong> Puedes exportar sin control de kilometraje.";
+            if (est.kmI === "N/R") {
+                if (aviso) {
+                    aviso.className = "alert alert-info py-3 small border-0 rounded-3 mb-4";
+                    aviso.innerHTML = "<strong>ℹ️ KM no registrado al inicio.</strong> Puedes exportar sin control de kilometraje.";
+                }
+                return;
+            }
+
+            if (aviso) {
+                aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
+                aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Si te equivocaste al inicio, ajusta manualmente el KM final para poder exportar con el dato corregido.`;
+            }
+
+            validarKmFinales();
         }
-        return;
-    }
 
-    if (aviso) {
-        aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
-        aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Si te equivocaste al inicio, ajusta manualmente el KM final para poder exportar con el dato corregido.`;
-    }
-
-    validarKmFinales();
-}
         function validarKmFinales() {
-    const val = parseFloat(document.getElementById('kmF').value);
-    const btn = document.getElementById('btnExportar');
-    const aviso = document.getElementById('aviso-km');
+            const val = parseFloat(document.getElementById('kmF').value);
+            const btn = document.getElementById('btnExportar');
+            const aviso = document.getElementById('aviso-km');
 
-    if (est.kmI === "N/R") {
-        btn.disabled = false;
-        return;
-    }
+            if (est.kmI === "N/R") {
+                btn.disabled = false;
+                return;
+            }
 
-    const invalido = isNaN(val) || val < est.kmI;
-    btn.disabled = invalido;
+            const invalido = isNaN(val) || val < est.kmI;
+            btn.disabled = invalido;
 
-    if (aviso) {
-        if (invalido) {
-            aviso.className = "alert alert-danger py-3 small border-0 rounded-3 mb-4";
-            aviso.innerHTML = `<strong>⚠️ Revisión necesaria:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. El KM final debe ser igual o superior para exportar. Si el error estuvo al inicio, corrige manualmente el valor final usando esa referencia.`;
-        } else {
-            aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
-            aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Revisa que el valor final sea coherente antes de exportar.`;
+            if (aviso) {
+                if (invalido) {
+                    aviso.className = "alert alert-danger py-3 small border-0 rounded-3 mb-4";
+                    aviso.innerHTML = `<strong>⚠️ Revisión necesaria:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. El KM final debe ser igual o superior para exportar. Si el error estuvo al inicio, corrige manualmente el valor final usando esa referencia.`;
+                } else {
+                    aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
+                    aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Revisa que el valor final sea coherente antes de exportar.`;
+                }
+            }
         }
-    }
-}
+
         async function obtenerDistanciaRuta(origen, destino) {
             if (!origen.lat || !destino.lat) return { km: "0.00", tipo: "Sin GPS" };
             try {
@@ -508,196 +635,249 @@ let persistencia = JSON.parse(localStorage.getItem('auditor_master_stats')) || {
             }
         }
 
-                async function exportarCSV() {
+        async function exportarCSV() {
             const btn = document.getElementById('btnExportar');
             btn.disabled = true;
             btn.innerText = "Sellando Auditoría Final... 🛰️";
+            bloquearUI("Generando y exportando CSV...");
 
-            const hF = fixT();
-            const hIniDate = new Date(est.hIni);
-            const fechaHoy = hIniDate.toLocaleDateString();
-            const y = hIniDate.getFullYear();
-            const m = String(hIniDate.getMonth() + 1).padStart(2, '0');
-            const d = String(hIniDate.getDate()).padStart(2, '0');
-            const fechaArchivo = `${y}-${m}-${d}`;
-            const kmF = parseFloat(document.getElementById('kmF').value) || 0;
-            const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
+            let estado = "info";
+            let titulo = "Exportación finalizada";
+            let mensaje = "Proceso completado.";
 
-            const calcularMetricasTiempo = (ms, descuentoMin = 0) => {
-                let msFinal = ms - (descuentoMin * 60000);
-                if (msFinal < 0) msFinal = 0;
+            try {
+                const hF = fixT();
+                const hIniDate = new Date(est.hIni);
+                const fechaHoy = hIniDate.toLocaleDateString();
+                const y = hIniDate.getFullYear();
+                const m = String(hIniDate.getMonth() + 1).padStart(2, '0');
+                const d = String(hIniDate.getDate()).padStart(2, '0');
+                const fechaArchivo = `${y}-${m}-${d}`;
+                const kmF = parseFloat(document.getElementById('kmF').value) || 0;
+                const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
 
-                const totalSeg = Math.floor(msFinal / 1000);
-                return {
-                    reloj: `${Math.floor(totalSeg / 3600).toString().padStart(2, '0')}:${Math.floor((totalSeg % 3600) / 60).toString().padStart(2, '0')}:${(totalSeg % 60).toString().padStart(2, '0')}`,
-                    decimal: (msFinal / 60000).toFixed(2)
-                };
-            };
+                const calcularMetricasTiempo = (ms, descuentoMin = 0) => {
+                    let msFinal = ms - (descuentoMin * 60000);
+                    if (msFinal < 0) msFinal = 0;
 
-            const fmtCoord = (coord) => {
-                if (!coord || coord.lat == null || coord.lng == null) return "N/R";
-                return `${coord.lat},${coord.lng}`;
-            };
-
-            const normalizarRuta = (ruta) => {
-                if (!ruta || !ruta.tipo) return { km: "0.00", tipo: "N/R" };
-
-                if (ruta.tipo === "Línea Recta") {
+                    const totalSeg = Math.floor(msFinal / 1000);
                     return {
-                        km: (parseFloat(ruta.km || 0) * 1.35).toFixed(2),
-                        tipo: "LINEAL+35%"
+                        reloj: `${Math.floor(totalSeg / 3600).toString().padStart(2, '0')}:${Math.floor((totalSeg % 3600) / 60).toString().padStart(2, '0')}:${(totalSeg % 60).toString().padStart(2, '0')}`,
+                        decimal: (msFinal / 60000).toFixed(2)
                     };
-                }
+                };
 
-                if (ruta.tipo === "Ruta Vial") {
+                const fmtCoord = (coord) => {
+                    if (!coord || coord.lat == null || coord.lng == null) return "N/R";
+                    return `${coord.lat},${coord.lng}`;
+                };
+
+                const normalizarRuta = (ruta) => {
+                    if (!ruta || !ruta.tipo) return { km: "0.00", tipo: "N/R" };
+
+                    if (ruta.tipo === "Línea Recta") {
+                        return {
+                            km: (parseFloat(ruta.km || 0) * 1.35).toFixed(2),
+                            tipo: "LINEAL+35%"
+                        };
+                    }
+
+                    if (ruta.tipo === "Ruta Vial") {
+                        return {
+                            km: parseFloat(ruta.km || 0).toFixed(2),
+                            tipo: "VIAL"
+                        };
+                    }
+
+                    if (ruta.tipo === "Sin GPS") {
+                        return {
+                            km: "0.00",
+                            tipo: "SIN GPS"
+                        };
+                    }
+
                     return {
                         km: parseFloat(ruta.km || 0).toFixed(2),
-                        tipo: "VIAL"
+                        tipo: ruta.tipo.toUpperCase()
                     };
-                }
-
-                if (ruta.tipo === "Sin GPS") {
-                    return {
-                        km: "0.00",
-                        tipo: "SIN GPS"
-                    };
-                }
-
-                return {
-                    km: parseFloat(ruta.km || 0).toFixed(2),
-                    tipo: ruta.tipo.toUpperCase()
                 };
-            };
 
-            let totalKmA = 0;
-            let totalKmB = 0;
-            let totalMinEspLAdj = 0;
-            let totalMinEspCAdj = 0;
-            let totalMinPed = 0;
-            let contadorRecogidasUnicas = 0;
-            let ultHRec = null;
-            let totalExcP = 0;
-            let totalExcV = 0;
+                let totalKmA = 0;
+                let totalKmB = 0;
+                let totalMinEspLAdj = 0;
+                let totalMinEspCAdj = 0;
+                let totalMinPed = 0;
+                let contadorRecogidasUnicas = 0;
+                let ultHRec = null;
+                let totalExcP = 0;
+                let totalExcV = 0;
 
-            const dTurno = calcularMetricasTiempo(hF - hIniDate);
-            const horasTurno = ((hF - hIniDate) / 3600000);
+                const dTurno = calcularMetricasTiempo(hF - hIniDate);
+                const horasTurno = ((hF - hIniDate) / 3600000);
 
-            let c = "\uFEFF";
-            c += `Reporte de Jornada;Fecha;${fechaHoy};Turno;${est.turno}\n`;
-            c += `Inicio;${fmtH(est.hIni)};Fin;${fmtH(hF)};Duracion;${dTurno.reloj};U_Turno;${horasTurno.toFixed(2)}\n`;
-            c += `KM_INI;${est.kmI};KM_FIN;${kmF};KM_TOTAL_REG;${(kmF - kmIn).toFixed(1)}\n`;
-            c += `\n`;
+                let c = "\uFEFF";
+                c += `Reporte de Jornada;Fecha;${fechaHoy};Turno;${est.turno}\n`;
+                c += `Inicio;${fmtH(est.hIni)};Fin;${fmtH(hF)};Duracion;${dTurno.reloj};U_Turno;${horasTurno.toFixed(2)}\n`;
+                c += `KM_INI;${est.kmI};KM_FIN;${kmF};KM_TOTAL_REG;${(kmF - kmIn).toFixed(1)}\n`;
+                c += `\n`;
 
-            // Cabecera con EXC_PESO y EXC_VOL añadidos tras la espera en local
-            c += "ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\n";
+                c += "ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\n";
 
-            for (let i = 0; i < est.hist.length; i++) {
-                const p = est.hist[i];
+                for (let i = 0; i < est.hist.length; i++) {
+                    const p = est.hist[i];
 
-                const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
-                const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
-                const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
-                const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
-                const tTot = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
+                    const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
+                    const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
+                    const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
+                    const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
+                    const tTot = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
 
-                if (p.hRec !== ultHRec) {
-                    contadorRecogidasUnicas++;
-                    ultHRec = p.hRec;
+                    if (p.hRec !== ultHRec) {
+                        contadorRecogidasUnicas++;
+                        ultHRec = p.hRec;
+                    }
+
+                    let rutaABruto = (i === 0 || p.hRec !== est.hist[i - 1]?.hRec)
+                        ? await obtenerDistanciaRuta(p.coordAsig || {}, p.coordLlegL || {})
+                        : { km: "0.00", tipo: "Sin GPS" };
+
+                    let origenB = (i > 0 && p.hRec === est.hist[i - 1]?.hRec)
+                        ? (est.hist[i - 1].coordLlegC || {})
+                        : (p.coordRec || {});
+
+                    let rutaBBruto = await obtenerDistanciaRuta(origenB, p.coordLlegC || {});
+
+                    const rutaA = normalizarRuta(rutaABruto);
+                    const rutaB = normalizarRuta(rutaBBruto);
+
+                    const kmA = parseFloat(rutaA.km || 0);
+                    const kmB = parseFloat(rutaB.km || 0);
+                    const kmTotPed = (kmA + kmB).toFixed(2);
+
+                    totalKmA += kmA;
+                    totalKmB += kmB;
+                    totalMinEspLAdj += parseFloat(tEL.decimal);
+                    totalMinEspCAdj += parseFloat(tEC.decimal);
+                    totalMinPed += parseFloat(tTot.decimal);
+                    totalExcP += (p.excP || 0);
+                    totalExcV += (p.excV || 0);
+
+                    c += [
+                        p.idPed || "",
+                        p.cliente || "",
+                        p.partner || "Pdte...",
+                        fmtH(p.hAsig),
+                        fmtCoord(p.coordAsig),
+                        fmtH(p.hLlegL),
+                        fmtCoord(p.coordRec),
+                        tA.reloj,
+                        tA.decimal,
+                        rutaA.tipo,
+                        rutaA.km,
+                        fmtH(p.hRec),
+                        tEL.reloj,
+                        tEL.decimal,
+                        (p.excP || 0),
+                        (p.excV || 0),
+                        fmtH(p.hLlegC),
+                        fmtCoord(p.coordLlegC),
+                        tB.reloj,
+                        tB.decimal,
+                        rutaB.tipo,
+                        rutaB.km,
+                        p.hCliApp ? fmtH(p.hCliApp) : "",
+                        fmtH(p.hFin),
+                        tEC.reloj,
+                        tEC.decimal,
+                        tTot.reloj,
+                        tTot.decimal,
+                        kmTotPed
+                    ].join(";") + "\n";
                 }
 
-                let rutaABruto = (i === 0 || p.hRec !== est.hist[i - 1]?.hRec)
-                    ? await obtenerDistanciaRuta(p.coordAsig || {}, p.coordLlegL || {})
-                    : { km: "0.00", tipo: "Sin GPS" };
+                c += `\n`;
+                c += `\n`;
+                c += `--- RESUMEN ---\n`;
+                c += `Duracion del Turno;${dTurno.reloj}\n`;
+                c += `U_Turno;${horasTurno.toFixed(2)}\n`;
+                c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
+                c += `Pedidos/Hora;${horasTurno > 0 ? (est.hist.length / horasTurno).toFixed(2) : "0.00"}\n`;
+                c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
+                c += `DISTANCIA TRAMO A;${totalKmA.toFixed(2)} km\n`;
+                c += `DISTANCIA TRAMO B;${totalKmB.toFixed(2)} km\n`;
+                c += `DISTANCIA TOTAL;${(totalKmA + totalKmB).toFixed(2)} km\n`;
+                c += `DISTANCIA REGISTRADA;${(kmF - kmIn).toFixed(1)} km\n`;
 
-                let origenB = (i > 0 && p.hRec === est.hist[i - 1]?.hRec)
-                    ? (est.hist[i - 1].coordLlegC || {})
-                    : (p.coordRec || {});
+                const nF = `${fechaArchivo}_${est.turno}_registro.csv`;
+                const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
+                const archivo = new File([blob], nF, { type: 'text/csv' });
 
-                let rutaBBruto = await obtenerDistanciaRuta(origenB, p.coordLlegC || {});
+                let guardadoFirme = false;
 
-                const rutaA = normalizarRuta(rutaABruto);
-                const rutaB = normalizarRuta(rutaBBruto);
-
-                const kmA = parseFloat(rutaA.km || 0);
-                const kmB = parseFloat(rutaB.km || 0);
-                const kmTotPed = (kmA + kmB).toFixed(2);
-
-                totalKmA += kmA;
-                totalKmB += kmB;
-                totalMinEspLAdj += parseFloat(tEL.decimal);
-                totalMinEspCAdj += parseFloat(tEC.decimal);
-                totalMinPed += parseFloat(tTot.decimal);
-                totalExcP += (p.excP || 0);
-                totalExcV += (p.excV || 0);
-
-                c += [
-                    p.idPed || "",
-                    p.cliente || "",
-                    p.partner || "Pdte...",
-                    fmtH(p.hAsig),
-                    fmtCoord(p.coordAsig),
-                    fmtH(p.hLlegL),
-                    fmtCoord(p.coordRec),
-                    tA.reloj,
-                    tA.decimal,
-                    rutaA.tipo,
-                    rutaA.km,
-                    fmtH(p.hRec),
-                    tEL.reloj,
-                    tEL.decimal,
-                    (p.excP || 0),   // EXC_PESO
-                    (p.excV || 0),   // EXC_VOL
-                    fmtH(p.hLlegC),
-                    fmtCoord(p.coordLlegC),
-                    tB.reloj,
-                    tB.decimal,
-                    rutaB.tipo,
-                    rutaB.km,
-                    p.hCliApp ? fmtH(p.hCliApp) : "",
-                    fmtH(p.hFin),
-                    tEC.reloj,
-                    tEC.decimal,
-                    tTot.reloj,
-                    tTot.decimal,
-                    kmTotPed
-                ].join(";") + "\n";
-            }
-
-            c += `\n`;
-            c += `\n`;
-            c += `--- RESUMEN ---\n`;
-            c += `Duracion del Turno;${dTurno.reloj}\n`;
-            c += `U_Turno;${horasTurno.toFixed(2)}\n`;
-            c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
-            c += `Pedidos/Hora;${horasTurno > 0 ? (est.hist.length / horasTurno).toFixed(2) : "0.00"}\n`;
-            c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
-            c += `DISTANCIA TRAMO A;${totalKmA.toFixed(2)} km\n`;
-            c += `DISTANCIA TRAMO B;${totalKmB.toFixed(2)} km\n`;
-            c += `DISTANCIA TOTAL;${(totalKmA + totalKmB).toFixed(2)} km\n`;
-            c += `DISTANCIA REGISTRADA;${(kmF - kmIn).toFixed(1)} km\n`;
-
-            const nF = `${fechaArchivo}_${est.turno}_registro.csv`;
-            const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
-            const archivo = new File([blob], nF, { type: 'text/csv' });
-
-            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-                try {
-                    await navigator.share({
-                        files: [archivo],
-                        title: nF,
-                        text: nF
-                    });
-                    activarModoReset();
-                } catch (err) {
-                    btn.disabled = false;
-                    btn.innerText = "Reintentar Exportar 🛰️";
+                if (window.showSaveFilePicker) {
+                    try {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: nF,
+                            types: [{ description: "CSV", accept: { "text/csv": [".csv"] } }]
+                        });
+                        const writable = await handle.createWritable();
+                        await writable.write(blob);
+                        await writable.close();
+                        guardadoFirme = true;
+                        estado = "ok";
+                        titulo = "Exportado correctamente";
+                        mensaje = "El archivo CSV se ha guardado en la ubicación seleccionada.";
+                    } catch (e) {
+                        if (e && e.name === "AbortError") {
+                            estado = "cancel";
+                            titulo = "Exportación cancelada";
+                            mensaje = "Has cancelado el guardado del archivo. Puedes volver a intentarlo.";
+                        } else {
+                            estado = "error";
+                            titulo = "Error en la exportación";
+                            mensaje = "Ocurrió un problema al guardar el archivo. Revisa la conexión o el almacenamiento y vuelve a intentarlo.";
+                        }
+                    }
+                } else if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+                    try {
+                        await navigator.share({
+                            files: [archivo],
+                            title: nF,
+                            text: nF
+                        });
+                        estado = "ok";
+                        titulo = "Exportación enviada";
+                        mensaje = "El archivo CSV se ha enviado al panel de compartir del sistema. Verifica que se haya guardado correctamente en el destino elegido antes de reiniciar.";
+                    } catch (err) {
+                        if (err && err.name === "AbortError") {
+                            estado = "cancel";
+                            titulo = "Exportación cancelada";
+                            mensaje = "Has cancelado la compartición del archivo. Puedes volver a intentarlo.";
+                        } else {
+                            estado = "error";
+                            titulo = "Error en la exportación";
+                            mensaje = "Ocurrió un problema al compartir el archivo. Prueba de nuevo o usa la descarga directa.";
+                        }
+                    }
+                } else {
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = nF;
+                    link.click();
+                    estado = "info";
+                    titulo = "Descarga iniciada";
+                    mensaje = "Se ha iniciado la descarga del archivo CSV. Comprueba que se ha guardado correctamente antes de reiniciar.";
                 }
-            } else {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = nF;
-                link.click();
-                activarModoReset();
+
+            } catch (e) {
+                estado = "error";
+                titulo = "Error inesperado";
+                mensaje = "Se ha producido un error inesperado durante la exportación. Prueba otra vez.";
+            } finally {
+                desbloquearUI();
+                btn.disabled = false;
+                btn.innerText = "Generar y Exportar CSV";
+                mostrarModalExport(titulo, mensaje);
             }
         }
 
