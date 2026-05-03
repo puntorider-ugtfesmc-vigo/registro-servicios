@@ -836,7 +836,7 @@ if (supportsFileSystemAccess) {
                         guardadoFirme = true;
                         estado = "ok";
                         titulo = "Exportado correctamente";
-                        mensaje = "El archivo CSV se ha guardado en la ubicación seleccionada.";
+                        mensaje = "El archivo CSV se ha guardado en la ubicación seleccionada. Puedes reiniciar la APP o volver a exportarlo si necesitas otra copia.";
                     } catch (e) {
                         if (e && e.name === "AbortError") {
                             estado = "cancel";
@@ -856,8 +856,8 @@ if (supportsFileSystemAccess) {
                             text: nF
                         });
                         estado = "ok";
-                        titulo = "Exportación enviada";
-                        mensaje = "El archivo CSV se ha enviado al panel de compartir del sistema. Verifica que se haya guardado correctamente en el destino elegido antes de reiniciar.";
+                        titulo = "CSV enviado al sistema de compartir";
+                        mensaje = "El archivo CSV se ha enviado al sistema de compartir del dispositivo. Comprueba físicamente que se haya guardado o enviado correctamente en la aplicación o destino que hayas elegido antes de reiniciar la APP.";
                     } catch (err) {
                         if (err && err.name === "AbortError") {
                             estado = "cancel";
@@ -876,7 +876,7 @@ if (supportsFileSystemAccess) {
                     link.click();
                     estado = "info";
                     titulo = "Descarga iniciada";
-                    mensaje = "Se ha iniciado la descarga del archivo CSV. Comprueba que se ha guardado correctamente antes de reiniciar.";
+                    mensaje = "Se ha iniciado la descarga del archivo CSV. Comprueba físicamente la carpeta Descargas o la ubicación configurada en tu navegador antes de reiniciar la APP.";
                 }
 
             } catch (e) {
