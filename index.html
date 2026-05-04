@@ -29,74 +29,25 @@
         .card-entrega:active { background: #f1f2f6; transform: translateX(5px); }
         .check-pill { background: #f1f2f6; padding: 16px; border-radius: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; font-weight: 700; cursor: pointer; }
         .name-input-group { background: #f1f9ff; padding: 20px; border-radius: 18px; margin-bottom: 25px; border-left: 6px solid var(--info); }
-        
-        /* Botonera de pedidos */
         .order-selector { display: flex; gap: 8px; margin-bottom: 20px; }
         .order-btn { flex: 1; padding: 15px; border-radius: 12px; border: 2px solid #eee; background: #f8f9fa; font-weight: 800; font-size: 1.2rem; transition: 0.2s; }
         .order-btn.active { background: var(--info); color: white; border-color: var(--info); transform: scale(1.05); }
-
-        /* Overlay de bloqueo global */
-        #ui-lock {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-        }
-        .ui-lock-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(120, 120, 120, 0.45);
-            backdrop-filter: grayscale(1) blur(1px);
-        }
-        .ui-lock-box {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(44, 62, 80, 0.92);
-            color: white;
-            padding: 22px 28px;
-            border-radius: 18px;
-            text-align: center;
-            min-width: 180px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            font-size: 0.95rem;
-        }
-
-        /* Modal resultado exportación */
-        #export-modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.35);
-            z-index: 10000;
-        }
-        #export-modal {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-        }
-        #export-modal .card {
-            max-width: 420px;
-            width: 90%;
-        }
+        #ui-lock { position: fixed; inset: 0; z-index: 9999; }
+        .ui-lock-backdrop { position: absolute; inset: 0; background: rgba(120, 120, 120, 0.45); backdrop-filter: grayscale(1) blur(1px); }
+        .ui-lock-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(44, 62, 80, 0.92); color: white; padding: 22px 28px; border-radius: 18px; text-align: center; min-width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-size: 0.95rem; }
+        #export-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 10000; }
+        #export-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10001; }
+        #export-modal .card { max-width: 420px; width: 90%; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <div id="undo-wrapper" class="hidden">
-            <button onclick="deshacer()" class="btn-undo">↺ DESHACER ÚLTIMO PASO</button>
-        </div>
-        
+        <div id="undo-wrapper" class="hidden"><button onclick="deshacer()" class="btn-undo">↺ DESHACER ÚLTIMO PASO</button></div>
+
         <div id="p_pre" class="text-center flex-grow-1 d-flex flex-column justify-content-center">
-            <div class="mb-4">
-                <img src="https://cdn-icons-png.flaticon.com/512/711/711192.png" width="120" style="opacity: 0.7">
-            </div>
+            <div class="mb-4"><img src="https://cdn-icons-png.flaticon.com/512/711/711192.png" width="120" style="opacity: 0.7"></div>
             <h1 class="display-5 fw-bold mb-3">Registro de Servicios</h1>
-            <div class="px-3">
-                <button onclick="iniciarJornada()" class="btn btn-massive btn-primary shadow-lg">Iniciar Turno</button>
-            </div>
+            <div class="px-3"><button onclick="iniciarJornada()" class="btn btn-massive btn-primary shadow-lg">Iniciar Turno</button></div>
         </div>
 
         <div id="p0" class="hidden">
@@ -119,22 +70,14 @@
                 <span class="status-badge" id="txt-inicio">INICIO: --:--</span>
                 <span class="status-badge bg-primary text-white shadow-sm" id="txt-tiempo-turno" style="font-family: 'Courier New', monospace; font-size: 1.1rem; min-width: 105px; text-align: center;">00:00:00</span>
             </div>
-            <div id="sec-asignar">
-                <button onclick="registrarAsignacion()" class="btn btn-massive btn-warning text-white shadow">🔔 Nuevo Pedido Asignado</button>
-            </div>
+            <div id="sec-asignar"><button onclick="registrarAsignacion()" class="btn btn-massive btn-warning text-white shadow">🔔 Nuevo Pedido Asignado</button></div>
             <div id="sec-ir-a-partner" class="hidden text-center">
-                <div class="alert alert-warning py-3 rounded-4 shadow-sm fw-bold mb-3">
-                    <span class="d-block fs-5">📍 EN RUTA AL LOCAL</span>
-                    <small>Calculando tiempo de desplazamiento...</small>
-                </div>
+                <div class="alert alert-warning py-3 rounded-4 shadow-sm fw-bold mb-3"><span class="d-block fs-5">📍 EN RUTA AL LOCAL</span><small>Calculando tiempo de desplazamiento...</small></div>
                 <button onclick="registrarLlegadaLocal()" class="btn btn-massive btn-info text-white shadow">He llegado al Local</button>
             </div>
             <div class="mt-5 pt-3">
                 <div id="instr-entrega" class="alert alert-info py-2 text-center small fw-bold mb-4 hidden">💡 TOCA EL CLIENTE AL LLEGAR AL PORTAL</div>
-                <div class="d-flex justify-content-between align-items-end mb-3">
-                    <h5 class="text-muted small fw-bold text-uppercase mb-0">Pedidos en Mochila</h5>
-                    <span class="badge bg-secondary rounded-pill px-3" id="cnt-bandeja">0</span>
-                </div>
+                <div class="d-flex justify-content-between align-items-end mb-3"><h5 class="text-muted small fw-bold text-uppercase mb-0">Pedidos en Mochila</h5><span class="badge bg-secondary rounded-pill px-3" id="cnt-bandeja">0</span></div>
                 <div id="lista-bandeja"></div>
             </div>
             <div class="mt-5 pt-4 d-flex justify-content-start">
@@ -147,7 +90,6 @@
             <h4 class="fw-bold mb-4">Información de la recogida</h4>
             <div class="card p-3 border-0 shadow-sm rounded-4 mb-4">
                 <label class="small fw-bold text-muted text-uppercase mb-2">Pedidos en esta recogida:</label>
-                
                 <div class="order-selector">
                     <button type="button" class="order-btn active" onclick="setNumPedidos(1, this)">1</button>
                     <button type="button" class="order-btn" onclick="setNumPedidos(2, this)">2</button>
@@ -155,27 +97,13 @@
                     <button type="button" class="order-btn" onclick="setNumPedidos(4, this)">4</button>
                     <button type="button" class="order-btn" onclick="setNumPedidos(5, this)">5</button>
                 </div>
-                <input type="hidden" id="inp-n" value="1">                
-                
+                <input type="hidden" id="inp-n" value="1">
                 <label class="small fw-bold text-muted text-uppercase mb-3">¿Excesos detectados?</label>
                 <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-p').click()">
-                            <input type="checkbox" id="chk-p" class="form-check-input" onclick="event.stopPropagation()"> 
-                            <span>PESO</span>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-v').click()">
-                            <input type="checkbox" id="chk-v" class="form-check-input" onclick="event.stopPropagation()"> 
-                            <span>VOL</span>
-                        </div>
-                    </div>
+                    <div class="col-6"><div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-p').click()"><input type="checkbox" id="chk-p" class="form-check-input" onclick="event.stopPropagation()"> <span>PESO</span></div></div>
+                    <div class="col-6"><div class="check-pill justify-content-center m-0" onclick="document.getElementById('chk-v').click()"><input type="checkbox" id="chk-v" class="form-check-input" onclick="event.stopPropagation()"> <span>VOL</span></div></div>
                 </div>
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted text-uppercase mb-2">Notas de recogida:</label>
-                    <textarea id="obs-rec" class="form-control rounded-3" rows="2" placeholder="Ej: Bolsa rota..."></textarea>
-                </div>
+                <div class="mb-3"><label class="small fw-bold text-muted text-uppercase mb-2">Notas de recogida:</label><textarea id="obs-rec" class="form-control rounded-3" rows="2" placeholder="Ej: Bolsa rota..."></textarea></div>
                 <div class="timer-display" id="cron-local" style="font-size: 2.5rem; margin: 10px 0;">00:00</div>
                 <button onclick="finRecogida()" class="btn btn-massive btn-success shadow">Finalizar recogida</button>
             </div>
@@ -184,20 +112,11 @@
         <div id="p3" class="hidden">
             <button onclick="navegar(1)" class="btn-undo border-0">← Volver a mochila</button>
             <h4 id="tit-ent" class="fw-bold mb-4 text-primary">Detalles de Entrega</h4>
-            <div class="smart-paste-area shadow-sm">
-                <label class="small fw-bold text-dark mb-3 d-block text-uppercase">📋 PEGA LOS DATOS DE LA APP AQUÍ:</label>
-                <textarea id="smart-paste-ent" placeholder="Copia el texto de la App del repartidor..." oninput="autoFillEnt()"></textarea>
-            </div>
+            <div class="smart-paste-area shadow-sm"><label class="small fw-bold text-dark mb-3 d-block text-uppercase">📋 PEGA LOS DATOS DE LA APP AQUÍ:</label><textarea id="smart-paste-ent" placeholder="Copia el texto de la App del repartidor..." oninput="autoFillEnt()"></textarea></div>
             <div class="card p-4 border-0 shadow-sm rounded-4">
                 <div class="timer-display" id="cron-cli">00:00</div>
-                <div class="mb-4">
-                    <label class="small fw-bold text-muted text-uppercase mb-2">ID Pedido Extraído:</label>
-                    <input type="text" id="inp-id" class="form-control form-control-lg input-readonly py-3" placeholder="Esperando datos..." readonly>
-                </div>
-                <div class="mb-4">
-                    <label class="small fw-bold text-muted text-uppercase mb-2">Observaciones Entrega:</label>
-                    <textarea id="obs-ent" class="form-control" rows="2" placeholder="Notas sobre el portal..."></textarea>
-                </div>
+                <div class="mb-4"><label class="small fw-bold text-muted text-uppercase mb-2">ID Pedido Extraído:</label><input type="text" id="inp-id" class="form-control form-control-lg input-readonly py-3" placeholder="Esperando datos..." readonly></div>
+                <div class="mb-4"><label class="small fw-bold text-muted text-uppercase mb-2">Observaciones Entrega:</label><textarea id="obs-ent" class="form-control" rows="2" placeholder="Notas sobre el portal..."></textarea></div>
                 <button id="btn-fin-ent" onclick="finEntrega()" class="btn btn-massive btn-success shadow" disabled>Cerrar Pedido</button>
             </div>
         </div>
@@ -209,11 +128,8 @@
                     <label class="small text-muted fw-bold text-uppercase mb-2 d-block">Kilómetros al finalizar:</label>
                     <input type="number" id="kmF" class="form-control form-control-lg text-center fw-bold py-3" style="font-size: 2rem;" oninput="validarKmFinales()">
                 </div>
-
                 <div id="aviso-km" class="alert alert-warning py-3 small border-0 rounded-3 mb-4"></div>
-
                 <button id="btnExportar" onclick="exportarCSV()" class="btn btn-massive btn-primary shadow-lg mb-4">Generar y Exportar CSV</button>
-
                 <div id="msg-seguridad" class="alert alert-secondary py-3 small m-0 border-0 rounded-3">
                     <p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> Reinicia solo después de comprobar que el CSV se ha guardado correctamente. Si el sistema no puede confirmarlo, te pedirá validación antes de borrar.</p>
                 </div>
@@ -222,15 +138,11 @@
         </div>
 
         <div id="global-log-wrapper" class="global-log hidden">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                <h6 class="text-muted small fw-bold text-uppercase m-0">Movimientos Recientes:</h6>
-                <span class="badge bg-light text-dark border">V11.5</span>
-            </div>
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3"><h6 class="text-muted small fw-bold text-uppercase m-0">Movimientos Recientes:</h6><span class="badge bg-light text-dark border">V11.5</span></div>
             <div id="timeline-content" class="timeline"></div>
         </div>
     </div>
 
-    <!-- Overlay de bloqueo -->
     <div id="ui-lock" class="hidden">
         <div class="ui-lock-backdrop"></div>
         <div class="ui-lock-box">
@@ -239,7 +151,6 @@
         </div>
     </div>
 
-    <!-- Modal resultado exportación -->
     <div id="export-modal-backdrop" class="hidden"></div>
     <div id="export-modal" class="hidden">
         <div class="card border-0 shadow rounded-4">
@@ -255,13 +166,13 @@
     </div>
 
     <script>
-        // ESTADO INICIAL
         let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, turno:'01', hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
         let pilaUndo = JSON.parse(localStorage.getItem('pila_undo_v7.3')) || [];
         let timer;
         let ultimoGuardadoFirme = false;
+
         const fixT = () => new Date();
-        const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
+        const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '';
 
         function bloquearUI(texto = "Procesando...") {
             const lock = document.getElementById('ui-lock');
@@ -277,34 +188,6 @@
             lock.classList.add('hidden');
         }
 
-        function reiniciarTrasExport() {
-            if (ultimoGuardadoFirme) {
-                cerrarModalExport();
-                bloquearUI("Reiniciando APP...");
-                setTimeout(() => {
-                    activarModoReset();
-                    desbloquearUI();
-                }, 250);
-                return;
-            }
-
-            const confirmado = confirm(
-                "⚠️ ATENCIÓN ANTES DE REINICIAR\\n\\n" +
-                "El sistema no ha podido confirmar físicamente que el CSV exista en el destino final.\\n" +
-                "Antes de reiniciar, comprueba manualmente el archivo.\\n\\n" +
-                "¿Deseas reiniciar igualmente?"
-            );
-
-            if (!confirmado) return;
-
-            cerrarModalExport();
-            bloquearUI("Reiniciando APP...");
-            setTimeout(() => {
-                activarModoReset();
-                desbloquearUI();
-            }, 250);
-        }
-
         function cerrarModalExport() {
             const bd = document.getElementById('export-modal-backdrop');
             const md = document.getElementById('export-modal');
@@ -314,23 +197,47 @@
 
         function mostrarModalExport(titulo, mensaje, permitirReset = false) {
             desbloquearUI();
-
             const bd = document.getElementById('export-modal-backdrop');
             const md = document.getElementById('export-modal');
             const title = document.getElementById('export-modal-title');
             const msg = document.getElementById('export-modal-msg');
-
             if (!bd || !md || !title || !msg) {
-                alert("Faltan elementos del modal de exportación en el HTML.");
+                alert('Faltan elementos del modal de exportación en el HTML.');
                 return;
             }
-
             ultimoGuardadoFirme = permitirReset;
             title.innerText = titulo;
             msg.innerText = mensaje;
-
             bd.classList.remove('hidden');
             md.classList.remove('hidden');
+        }
+
+        function reiniciarTrasExport() {
+            if (ultimoGuardadoFirme) {
+                cerrarModalExport();
+                bloquearUI('Reiniciando APP...');
+                setTimeout(() => {
+                    activarModoReset();
+                    desbloquearUI();
+                }, 250);
+                return;
+            }
+
+            const confirmado = confirm(
+                '⚠️ ATENCIÓN ANTES DE REINICIAR\n\n' +
+                'El sistema no ha podido confirmar físicamente que el CSV exista en el destino final.\n' +
+                'Antes de reiniciar, comprueba manualmente el archivo.\n\n' +
+                '¿Deseas reiniciar igualmente?'
+            );
+
+            if (!confirmado) return;
+
+            cerrarModalExport();
+            bloquearUI('Reiniciando APP...');
+            setTimeout(() => {
+                activarModoReset();
+                desbloquearUI();
+            }, 250);
         }
 
         const obtenerGPS = () => {
@@ -344,19 +251,17 @@
             });
         };
 
-        // MOTOR CRONOMETRO GLOBAL
         function actualizarCronometroTurno() {
-            if(!est.hIni) return;
+            if (!est.hIni) return;
             const diff = fixT() - new Date(est.hIni);
             const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
             const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
             const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
             const el = document.getElementById('txt-tiempo-turno');
-            if(el) el.innerText = `${h}:${m}:${s}`;
+            if (el) el.innerText = `${h}:${m}:${s}`;
         }
         setInterval(actualizarCronometroTurno, 1000);
 
-        // FUNCIONES DE SOPORTE
         function setNumPedidos(n, btn) {
             document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -364,111 +269,92 @@
         }
 
         function limpiarFormularioRecogida() {
-            document.getElementById('inp-n').value = "1";
+            document.getElementById('inp-n').value = '1';
             document.querySelectorAll('.order-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.order-btn')[0].classList.add('active');
             document.getElementById('chk-p').checked = false;
             document.getElementById('chk-v').checked = false;
             document.getElementById('obs-rec').value = '';
-            document.getElementById('cron-local').innerText = "00:00";
+            document.getElementById('cron-local').innerText = '00:00';
         }
 
         function autoFillEnt() {
-    const area = document.getElementById('smart-paste-ent');
-    const val = area.value.trim();
+            const area = document.getElementById('smart-paste-ent');
+            const val = area.value.trim();
+            const inpId = document.getElementById('inp-id');
+            const btnFin = document.getElementById('btn-fin-ent');
 
-    const inpId = document.getElementById('inp-id');
-    const btnFin = document.getElementById('btn-fin-ent');
-
-    if (!val) {
-        inpId.value = "";
-        btnFin.disabled = true;
-        if (est.entAct) {
-            est.entAct.partner = "";
-            est.entAct.hCliApp = null;
-        }
-        return;
-    }
-
-    const lineas = val
-        .split(/\r?\n/)
-        .map(l => l.trim())
-        .filter(l => l);
-
-    const partnerTexto = lineas[0] || "";
-
-    const idMatch = val.match(/Pedido\s*n\s*\.?\s*(?:º|o|°)?\s*(\d{6,})/i);
-
-    if (!idMatch || !idMatch[1]) {
-        inpId.value = "";
-        btnFin.disabled = true;
-        if (est.entAct) {
-            est.entAct.partner = partnerTexto;
-            est.entAct.hCliApp = null;
-        }
-        return;
-    }
-
-    const newId = idMatch[1];
-
-    if (est.hist.some(p => p.idPed === newId)) {
-        alert("🛑 ¡AVISO DE SEGURIDAD!\nPedido duplicado.");
-        area.value = "";
-        inpId.value = "";
-        btnFin.disabled = true;
-        if (est.entAct) {
-            est.entAct.partner = "";
-            est.entAct.hCliApp = null;
-        }
-        return;
-    }
-
-    let hCliApp = null;
-    const horaMatch = val.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
-
-    if (horaMatch && horaMatch[1]) {
-        const [hh, mm] = horaMatch[1].split(":").map(Number);
-        const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
-
-        hCliApp = new Date(
-            base.getFullYear(),
-            base.getMonth(),
-            base.getDate(),
-            hh,
-            mm,
-            0,
-            0
-        );
-
-        if (est.entAct && est.entAct.hLlegC) {
-            const llegada = new Date(est.entAct.hLlegC);
-            if (hCliApp < llegada) {
-                hCliApp.setDate(hCliApp.getDate() + 1);
+            if (!val) {
+                inpId.value = '';
+                btnFin.disabled = true;
+                if (est.entAct) {
+                    est.entAct.partner = '';
+                    est.entAct.hCliApp = null;
+                }
+                return;
             }
+
+            const lineas = val.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+            const partnerTexto = lineas[0] || '';
+            const idMatch = val.match(/Pedido\s*n\s*\.?\s*(?:º|o|°)?\s*(\d{6,})/i);
+
+            if (!idMatch || !idMatch[1]) {
+                inpId.value = '';
+                btnFin.disabled = true;
+                if (est.entAct) {
+                    est.entAct.partner = partnerTexto;
+                    est.entAct.hCliApp = null;
+                }
+                return;
+            }
+
+            const newId = idMatch[1];
+
+            if (est.hist.some(p => p.idPed === newId)) {
+                alert('🛑 ¡AVISO DE SEGURIDAD!\nPedido duplicado.');
+                area.value = '';
+                inpId.value = '';
+                btnFin.disabled = true;
+                if (est.entAct) {
+                    est.entAct.partner = '';
+                    est.entAct.hCliApp = null;
+                }
+                return;
+            }
+
+            let hCliApp = null;
+            const horaMatch = val.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
+
+            if (horaMatch && horaMatch[1]) {
+                const [hh, mm] = horaMatch[1].split(':').map(Number);
+                const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
+                hCliApp = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hh, mm, 0, 0);
+                if (est.entAct && est.entAct.hLlegC) {
+                    const llegada = new Date(est.entAct.hLlegC);
+                    if (hCliApp < llegada) hCliApp.setDate(hCliApp.getDate() + 1);
+                }
+            }
+
+            inpId.value = newId;
+            btnFin.disabled = false;
+
+            if (!est.entAct) est.entAct = {};
+            est.entAct.partner = partnerTexto;
+            est.entAct.hCliApp = hCliApp;
         }
-    }
 
-    inpId.value = newId;
-    btnFin.disabled = false;
-
-    if (!est.entAct) est.entAct = {};
-    est.entAct.partner = partnerTexto;
-    est.entAct.hCliApp = hCliApp;
-}
-
-        // NAVEGACIÓN Y ESTADO
-        function navegar(fase, bypassReset = false) {
+        function navegar(fase) {
             document.querySelectorAll('[id^="p"]').forEach(p => p.classList.add('hidden'));
-            const pantalla = document.getElementById('p'+fase);
+            const pantalla = document.getElementById('p' + fase);
             if (pantalla) pantalla.classList.remove('hidden');
             const standBy = (fase === '_pre' || fase === 0);
             document.getElementById('undo-wrapper').classList.toggle('hidden', standBy);
             document.getElementById('global-log-wrapper').classList.toggle('hidden', standBy);
             est.f = fase;
-            if(fase === 1) renderMenu();
-            if(fase === 2 && est.hUlt) startCron('cron-local', est.hUlt);
-            if(fase === 3 && est.entAct) startCron('cron-cli', est.entAct.hLlegC);
-            if(fase === 4) { prepararPantallaFinal(); }
+            if (fase === 1) renderMenu();
+            if (fase === 2 && est.hUlt) startCron('cron-local', est.hUlt);
+            if (fase === 3 && est.entAct) startCron('cron-cli', est.entAct.hLlegC);
+            if (fase === 4) prepararPantallaFinal();
             renderTimeline();
             saveState();
         }
@@ -477,14 +363,14 @@
             registrarPuntoRetorno();
             est.hIni = fixT();
             est.hUlt = est.hIni;
-            est.logHitos = [{ texto: "Inicio de Turno Oficial", hora: est.hIni }];
+            est.logHitos = [{ texto: 'Inicio de Turno Oficial', hora: est.hIni }];
             navegar(0);
         }
 
-        function comenzarTurno() { 
-            registrarPuntoRetorno(); 
-            est.hUlt = fixT(); 
-            
+        function comenzarTurno() {
+            registrarPuntoRetorno();
+            est.hUlt = fixT();
+
             const ahora = new Date();
             const yTurno = ahora.getFullYear();
             const mTurno = String(ahora.getMonth() + 1).padStart(2, '0');
@@ -501,82 +387,82 @@
             }
 
             localStorage.setItem('auditor_master_stats', JSON.stringify(persistencia));
-            
-            est.turno = persistencia.ultimoTurno.toString().padStart(2, '0'); 
-            
-            est.kmI = document.getElementById('usarKM').checked ? (parseFloat(document.getElementById('kmI').value) || 0) : "N/R"; 
+            est.turno = persistencia.ultimoTurno.toString().padStart(2, '0');
+            est.kmI = document.getElementById('usarKM').checked ? (parseFloat(document.getElementById('kmI').value) || 0) : 'N/R';
             est.logHitos.push({ texto: `Turno ${est.turno} iniciado automáticamente`, hora: est.hUlt });
-            navegar(1); 
+            navegar(1);
         }
 
-        async function registrarAsignacion() { 
-            bloquearUI("Registrando asignación y GPS...");
+        async function registrarAsignacion() {
+            bloquearUI('Registrando asignación y GPS...');
             try {
-                registrarPuntoRetorno(); 
-                est.hAsig = fixT(); 
-                est.hUlt = est.hAsig; 
+                registrarPuntoRetorno();
+                est.hAsig = fixT();
+                est.hUlt = est.hAsig;
                 est.coordAsig = await obtenerGPS();
-                est.logHitos.push({ texto: "Pedido Asignado", hora: est.hAsig }); 
-                navegar(1); 
+                est.logHitos.push({ texto: 'Pedido Asignado', hora: est.hAsig });
+                navegar(1);
             } finally {
                 desbloquearUI();
             }
         }
 
-        async function registrarLlegadaLocal() { 
-            bloquearUI("Registrando llegada al local...");
+        async function registrarLlegadaLocal() {
+            bloquearUI('Registrando llegada al local...');
             try {
-                registrarPuntoRetorno(); 
-                est.hUlt = fixT(); 
+                registrarPuntoRetorno();
+                est.hUlt = fixT();
                 est.coordLlegL = await obtenerGPS();
-                est.logHitos.push({ texto: "Llegada al Local", hora: est.hUlt }); 
-                limpiarFormularioRecogida(); 
-                navegar(2); 
+                est.logHitos.push({ texto: 'Llegada al Local', hora: est.hUlt });
+                limpiarFormularioRecogida();
+                navegar(2);
             } finally {
                 desbloquearUI();
             }
         }
 
         function confirmarFinTurno() {
-            if(confirm("🚨 ATENCIÓN 🚨\\n\\n¿Estás completamente seguro de que quieres FINALIZAR EL TURNO?")) {
-                navegar(4);
-            }
+            if (confirm('🚨 ATENCIÓN 🚨\n\n¿Estás completamente seguro de que quieres FINALIZAR EL TURNO?')) navegar(4);
         }
 
         async function finRecogida() {
-            bloquearUI("Guardando recogida...");
+            bloquearUI('Guardando recogida...');
             try {
                 registrarPuntoRetorno();
                 const h = fixT();
                 const n = parseInt(document.getElementById('inp-n').value);
                 const ubicacionRecogida = await obtenerGPS();
-                for(let i=0; i<n; i++) {
-                    const identificador = `${i+1}/${n}`;
-                    est.bandeja.push({ 
-                        id: Date.now() + i, 
-                        partner: "Pdte...", 
+                for (let i = 0; i < n; i++) {
+                    const identificador = `${i + 1}/${n}`;
+                    est.bandeja.push({
+                        id: Date.now() + i,
+                        partner: 'Pdte...',
                         cliente: identificador,
-                        hAsig: est.hAsig, 
-                        hLlegL: est.hUlt, 
-                        hRec: h, 
+                        hAsig: est.hAsig,
+                        hLlegL: est.hUlt,
+                        hRec: h,
                         coordAsig: est.coordAsig,
                         coordLlegL: est.coordLlegL,
                         coordRec: ubicacionRecogida,
-                        idx: i+1, total: n, 
-                        excP: (i===0 && document.getElementById('chk-p').checked ? 1 : 0), 
-                        excV: (i===0 && document.getElementById('chk-v').checked ? 1 : 0), 
-                        obsRec: (i===0 ? document.getElementById('obs-rec').value : "") 
+                        idx: i + 1,
+                        total: n,
+                        excP: (i === 0 && document.getElementById('chk-p').checked ? 1 : 0),
+                        excV: (i === 0 && document.getElementById('chk-v').checked ? 1 : 0),
+                        obsRec: (i === 0 ? document.getElementById('obs-rec').value : '')
                     });
                 }
                 est.logHitos.push({ texto: `Carga finalizada (${n} pedidos)`, hora: h });
-                est.hAsig = null; est.hUlt = h; clearInterval(timer); navegar(1);
+                est.hAsig = null;
+                est.hUlt = h;
+                clearInterval(timer);
+                navegar(1);
             } finally {
                 desbloquearUI();
             }
         }
 
         async function preEntrega(id) {
-            bloquearUI("Obteniendo posición del cliente...");
+            bloquearUI('Obteniendo posición del cliente...');
             try {
                 registrarPuntoRetorno();
                 est.entAct = est.bandeja.find(e => e.id === id);
@@ -597,32 +483,41 @@
         function finEntrega() {
             registrarPuntoRetorno();
             const h = fixT();
-            est.hist.push({ 
-                ...est.entAct, 
-                hFin: h, 
-                idPed: document.getElementById('inp-id').value, 
-                obsEnt: document.getElementById('obs-ent').value 
+            const idPed = document.getElementById('inp-id').value.trim();
+            const obsEnt = document.getElementById('obs-ent').value;
+
+            if (!est.entAct) {
+                alert('No hay entrega activa.');
+                return;
+            }
+
+            est.hist.push({
+                ...est.entAct,
+                hFin: h,
+                idPed: idPed,
+                partner: est.entAct.partner || 'Pdte...',
+                hCliApp: est.entAct.hCliApp || null,
+                obsEnt: obsEnt
             });
-            est.logHitos.push({ texto: `Entrega cerrada`, hora: h });
+
+            est.logHitos.push({ texto: 'Entrega cerrada', hora: h });
             est.bandeja = est.bandeja.filter(e => e.id !== est.entAct.id);
-            est.hUlt = h; 
-            est.entAct = null; 
+            est.hUlt = h;
+            est.entAct = null;
             clearInterval(timer);
             navegar(1);
         }
 
         function renderMenu() {
-            document.getElementById('txt-inicio').innerText = "INICIO: " + fmtH(est.hIni);
+            document.getElementById('txt-inicio').innerText = 'INICIO: ' + fmtH(est.hIni);
             document.getElementById('cnt-bandeja').innerText = est.bandeja.length;
             document.getElementById('sec-asignar').classList.toggle('hidden', !!est.hAsig);
             document.getElementById('sec-ir-a-partner').classList.toggle('hidden', !est.hAsig);
-            const lb = document.getElementById('lista-bandeja'); 
+            const lb = document.getElementById('lista-bandeja');
             lb.innerHTML = est.bandeja.length ? '' : '<p class="text-center mt-4 text-muted">Mochila vacía</p>';
-            
-            est.bandeja.forEach(e => { 
-                const horaRecogida = new Date(e.hRec).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                lb.innerHTML += `<div class="card card-entrega" onclick="preEntrega(${e.id})"><strong>📍 ${horaRecogida} - Pedido ${e.cliente}</strong></div>`; 
+            est.bandeja.forEach(e => {
+                const horaRecogida = new Date(e.hRec).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                lb.innerHTML += `<div class="card card-entrega" onclick="preEntrega(${e.id})"><strong>📍 ${horaRecogida} - Pedido ${e.cliente}</strong></div>`;
             });
         }
 
@@ -636,82 +531,65 @@
 
         function startCron(id, ref) {
             const r = new Date(ref);
-            if(timer) clearInterval(timer);
+            if (timer) clearInterval(timer);
             timer = setInterval(() => {
                 const s = Math.floor((fixT() - r) / 1000);
                 const el = document.getElementById(id);
-                if(el) el.innerText = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+                if (el) el.innerText = `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
             }, 1000);
         }
 
-        function registrarPuntoRetorno() { 
-            pilaUndo.push(JSON.parse(JSON.stringify(est))); 
-            if(pilaUndo.length > 20) pilaUndo.shift(); 
-            localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo)); 
+        function registrarPuntoRetorno() {
+            pilaUndo.push(JSON.parse(JSON.stringify(est)));
+            if (pilaUndo.length > 20) pilaUndo.shift();
+            localStorage.setItem('pila_undo_v7.3', JSON.stringify(pilaUndo));
         }
 
-        function deshacer() { 
-            if(pilaUndo.length > 0) { 
-                est = pilaUndo.pop(); 
-                clearInterval(timer); 
-                navegar(est.f, true); 
-            } 
+        function deshacer() {
+            if (pilaUndo.length > 0) {
+                est = pilaUndo.pop();
+                clearInterval(timer);
+                navegar(est.f);
+            }
         }
 
-        function saveState() { 
-            localStorage.setItem('auditor_v7.3', JSON.stringify(est)); 
+        function saveState() {
+            localStorage.setItem('auditor_v7.3', JSON.stringify(est));
         }
 
         function activarModoReset() {
             localStorage.removeItem('auditor_v7.3');
             localStorage.removeItem('pila_undo_v7.3');
-
-            est = {
-                f: '_pre',
-                hIni: null,
-                kmI: 0,
-                turno: '01',
-                hAsig: null,
-                hUlt: null,
-                bandeja: [],
-                hist: [],
-                logHitos: []
-            };
-
+            est = { f: '_pre', hIni: null, kmI: 0, turno: '01', hAsig: null, hUlt: null, bandeja: [], hist: [], logHitos: [] };
             pilaUndo = [];
             est.entAct = null;
             clearInterval(timer);
-
             const kmIEl = document.getElementById('kmI');
             const kmFEl = document.getElementById('kmF');
             const usarKMEl = document.getElementById('usarKM');
-
             if (kmIEl) kmIEl.value = 0;
             if (kmFEl) kmFEl.value = '';
-            if (usarKMEl) {
+            if (usarKMEl && kmIEl) {
                 usarKMEl.checked = true;
                 kmIEl.disabled = false;
             }
-
+            cerrarModalExport();
             navegar('_pre');
         }
 
         function prepararPantallaFinal() {
             const aviso = document.getElementById('aviso-km');
-
-            if (est.kmI === "N/R") {
+            if (est.kmI === 'N/R') {
                 if (aviso) {
-                    aviso.className = "alert alert-info py-3 small border-0 rounded-3 mb-4";
-                    aviso.innerHTML = "<strong>ℹ️ KM no registrado al inicio.</strong> Puedes exportar sin control de kilometraje.";
+                    aviso.className = 'alert alert-info py-3 small border-0 rounded-3 mb-4';
+                    aviso.innerHTML = '<strong>ℹ️ KM no registrado al inicio.</strong> Puedes exportar sin control de kilometraje.';
                 }
                 return;
             }
-
             if (aviso) {
-                aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
+                aviso.className = 'alert alert-warning py-3 small border-0 rounded-3 mb-4';
                 aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Si te equivocaste al inicio, ajusta manualmente el KM final para poder exportar con el dato corregido.`;
             }
-
             validarKmFinales();
         }
 
@@ -719,49 +597,47 @@
             const val = parseFloat(document.getElementById('kmF').value);
             const btn = document.getElementById('btnExportar');
             const aviso = document.getElementById('aviso-km');
-
-            if (est.kmI === "N/R") {
+            if (est.kmI === 'N/R') {
                 btn.disabled = false;
                 return;
             }
-
             const invalido = isNaN(val) || val < est.kmI;
             btn.disabled = invalido;
-
             if (aviso) {
                 if (invalido) {
-                    aviso.className = "alert alert-danger py-3 small border-0 rounded-3 mb-4";
+                    aviso.className = 'alert alert-danger py-3 small border-0 rounded-3 mb-4';
                     aviso.innerHTML = `<strong>⚠️ Revisión necesaria:</strong> ATENTO, El KM inicial registrado fue <strong>${est.kmI}</strong>. El KM final debe ser igual o superior para exportar. Si el error estuvo al inicio, corrige manualmente el valor final usando esa referencia.`;
                 } else {
-                    aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
+                    aviso.className = 'alert alert-warning py-3 small border-0 rounded-3 mb-4';
                     aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Revisa que el valor final sea coherente antes de exportar.`;
                 }
             }
         }
 
         async function obtenerDistanciaRuta(origen, destino) {
-            if (!origen.lat || !destino.lat) return { km: "0.00", tipo: "Sin GPS" };
+            if (!origen || !destino || origen.lat == null || destino.lat == null) return { km: '0.00', tipo: 'Sin GPS' };
             try {
                 const url = `https://router.project-osrm.org/route/v1/driving/${origen.lng},${origen.lat};${destino.lng},${destino.lat}?overview=false`;
                 const resp = await fetch(url);
                 const data = await resp.json();
-                return data.code === 'Ok' ? { km: (data.routes[0].distance / 1000).toFixed(2), tipo: "Ruta Vial" } : { km: "0.00", tipo: "Error" };
+                return data.code === 'Ok' ? { km: (data.routes[0].distance / 1000).toFixed(2), tipo: 'Ruta Vial' } : { km: '0.00', tipo: 'Error' };
             } catch (e) {
-                const R = 6371; const dLat = (destino.lat - origen.lat) * Math.PI / 180; const dLng = (destino.lng - origen.lng) * Math.PI / 180;
-                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(origen.lat * Math.PI / 180) * Math.cos(destino.lat * Math.PI / 180) * Math.sin(dLng/2) * Math.sin(dLng/2);
-                return { km: (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2), tipo: "Línea Recta" };
+                const R = 6371;
+                const dLat = (destino.lat - origen.lat) * Math.PI / 180;
+                const dLng = (destino.lng - origen.lng) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(origen.lat * Math.PI / 180) * Math.cos(destino.lat * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+                return { km: (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(2), tipo: 'Línea Recta' };
             }
         }
 
         async function exportarCSV() {
             const btn = document.getElementById('btnExportar');
             btn.disabled = true;
-            btn.innerText = "Sellando Auditoría Final... 🛰️";
-            bloquearUI("Generando y exportando CSV...");
+            btn.innerText = 'Sellando Auditoría Final... 🛰️';
+            bloquearUI('Generando y exportando CSV...');
 
-            let estado = "info";
-            let titulo = "Exportación finalizada";
-            let mensaje = "Proceso completado.";
+            let titulo = 'Exportación finalizada';
+            let mensaje = 'Proceso completado.';
             let guardadoFirme = false;
 
             try {
@@ -773,12 +649,11 @@
                 const d = String(hIniDate.getDate()).padStart(2, '0');
                 const fechaArchivo = `${y}-${m}-${d}`;
                 const kmF = parseFloat(document.getElementById('kmF').value) || 0;
-                const kmIn = est.kmI === "N/R" ? 0 : parseFloat(est.kmI);
+                const kmIn = est.kmI === 'N/R' ? 0 : parseFloat(est.kmI);
 
                 const calcularMetricasTiempo = (ms, descuentoMin = 0) => {
                     let msFinal = ms - (descuentoMin * 60000);
                     if (msFinal < 0) msFinal = 0;
-
                     const totalSeg = Math.floor(msFinal / 1000);
                     return {
                         reloj: `${Math.floor(totalSeg / 3600).toString().padStart(2, '0')}:${Math.floor((totalSeg % 3600) / 60).toString().padStart(2, '0')}:${(totalSeg % 60).toString().padStart(2, '0')}`,
@@ -787,45 +662,20 @@
                 };
 
                 const fmtCoord = (coord) => {
-                    if (!coord || coord.lat == null || coord.lng == null) return "N/R";
+                    if (!coord || coord.lat == null || coord.lng == null) return 'N/R';
                     return `${coord.lat},${coord.lng}`;
                 };
 
                 const normalizarRuta = (ruta) => {
-                    if (!ruta || !ruta.tipo) return { km: "0.00", tipo: "N/R" };
-
-                    if (ruta.tipo === "Línea Recta") {
-                        return {
-                            km: (parseFloat(ruta.km || 0) * 1.35).toFixed(2),
-                            tipo: "LINEAL+35%"
-                        };
-                    }
-
-                    if (ruta.tipo === "Ruta Vial") {
-                        return {
-                            km: parseFloat(ruta.km || 0).toFixed(2),
-                            tipo: "VIAL"
-                        };
-                    }
-
-                    if (ruta.tipo === "Sin GPS") {
-                        return {
-                            km: "0.00",
-                            tipo: "SIN GPS"
-                        };
-                    }
-
-                    return {
-                        km: parseFloat(ruta.km || 0).toFixed(2),
-                        tipo: ruta.tipo.toUpperCase()
-                    };
+                    if (!ruta || !ruta.tipo) return { km: '0.00', tipo: 'N/R' };
+                    if (ruta.tipo === 'Línea Recta') return { km: (parseFloat(ruta.km || 0) * 1.35).toFixed(2), tipo: 'LINEAL+35%' };
+                    if (ruta.tipo === 'Ruta Vial') return { km: parseFloat(ruta.km || 0).toFixed(2), tipo: 'VIAL' };
+                    if (ruta.tipo === 'Sin GPS') return { km: '0.00', tipo: 'SIN GPS' };
+                    return { km: parseFloat(ruta.km || 0).toFixed(2), tipo: ruta.tipo.toUpperCase() };
                 };
 
                 let totalKmA = 0;
                 let totalKmB = 0;
-                let totalMinEspLAdj = 0;
-                let totalMinEspCAdj = 0;
-                let totalMinPed = 0;
                 let contadorRecogidasUnicas = 0;
                 let ultHRec = null;
                 let totalExcP = 0;
@@ -834,17 +684,15 @@
                 const dTurno = calcularMetricasTiempo(hF - hIniDate);
                 const horasTurno = ((hF - hIniDate) / 3600000);
 
-                let c = "\\uFEFF";
-                c += `Reporte de Jornada;Fecha;${fechaHoy};Turno;${est.turno}\\n`;
-                c += `Inicio;${fmtH(est.hIni)};Fin;${fmtH(hF)};Duracion;${dTurno.reloj};U_Turno;${horasTurno.toFixed(2)}\\n`;
-                c += `KM_INI;${est.kmI};KM_FIN;${kmF};KM_TOTAL_REG;${(kmF - kmIn).toFixed(1)}\\n`;
-                c += `\\n`;
-
-                c += "ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\\n";
+                let c = '\uFEFF';
+                c += `Reporte de Jornada;Fecha;${fechaHoy};Turno;${est.turno}\n`;
+                c += `Inicio;${fmtH(est.hIni)};Fin;${fmtH(hF)};Duracion;${dTurno.reloj};U_Turno;${horasTurno.toFixed(2)}\n`;
+                c += `KM_INI;${est.kmI};KM_FIN;${kmF};KM_TOTAL_REG;${(kmF - kmIn).toFixed(1)}\n`;
+                c += `\n`;
+                c += 'ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\n';
 
                 for (let i = 0; i < est.hist.length; i++) {
                     const p = est.hist[i];
-
                     const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
                     const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
                     const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
@@ -858,33 +706,28 @@
 
                     let rutaABruto = (i === 0 || p.hRec !== est.hist[i - 1]?.hRec)
                         ? await obtenerDistanciaRuta(p.coordAsig || {}, p.coordLlegL || {})
-                        : { km: "0.00", tipo: "Sin GPS" };
+                        : { km: '0.00', tipo: 'Sin GPS' };
 
                     let origenB = (i > 0 && p.hRec === est.hist[i - 1]?.hRec)
                         ? (est.hist[i - 1].coordLlegC || {})
                         : (p.coordRec || {});
 
                     let rutaBBruto = await obtenerDistanciaRuta(origenB, p.coordLlegC || {});
-
                     const rutaA = normalizarRuta(rutaABruto);
                     const rutaB = normalizarRuta(rutaBBruto);
-
                     const kmA = parseFloat(rutaA.km || 0);
                     const kmB = parseFloat(rutaB.km || 0);
                     const kmTotPed = (kmA + kmB).toFixed(2);
 
                     totalKmA += kmA;
                     totalKmB += kmB;
-                    totalMinEspLAdj += parseFloat(tEL.decimal);
-                    totalMinEspCAdj += parseFloat(tEC.decimal);
-                    totalMinPed += parseFloat(tTot.decimal);
                     totalExcP += (p.excP || 0);
                     totalExcV += (p.excV || 0);
 
                     c += [
-                        p.idPed || "",
-                        p.cliente || "",
-                        p.partner || "Pdte...",
+                        p.idPed || '',
+                        p.cliente || '',
+                        p.partner || 'Pdte...',
                         fmtH(p.hAsig),
                         fmtCoord(p.coordAsig),
                         fmtH(p.hLlegL),
@@ -904,125 +747,101 @@
                         tB.decimal,
                         rutaB.tipo,
                         rutaB.km,
-                        p.hCliApp ? fmtH(p.hCliApp) : "",
+                        p.hCliApp ? fmtH(p.hCliApp) : '',
                         fmtH(p.hFin),
                         tEC.reloj,
                         tEC.decimal,
                         tTot.reloj,
                         tTot.decimal,
                         kmTotPed
-                    ].join(";") + "\\n";
+                    ].join(';') + '\n';
                 }
 
-                c += `\\n`;
-                c += `\\n`;
-                c += `--- RESUMEN ---\\n`;
-                c += `Duracion del Turno;${dTurno.reloj}\\n`;
-                c += `U_Turno;${horasTurno.toFixed(2)}\\n`;
-                c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\\n`;
-                c += `Pedidos/Hora;${horasTurno > 0 ? (est.hist.length / horasTurno).toFixed(2) : "0.00"}\\n`;
-                c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\\n`;
-                c += `DISTANCIA TRAMO A;${totalKmA.toFixed(2)} km\\n`;
-                c += `DISTANCIA TRAMO B;${totalKmB.toFixed(2)} km\\n`;
-                c += `DISTANCIA TOTAL;${(totalKmA + totalKmB).toFixed(2)} km\\n`;
-                c += `DISTANCIA REGISTRADA;${(kmF - kmIn).toFixed(1)} km\\n`;
+                c += `\n\n--- RESUMEN ---\n`;
+                c += `Duracion del Turno;${dTurno.reloj}\n`;
+                c += `U_Turno;${horasTurno.toFixed(2)}\n`;
+                c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
+                c += `Pedidos/Hora;${horasTurno > 0 ? (est.hist.length / horasTurno).toFixed(2) : '0.00'}\n`;
+                c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
+                c += `DISTANCIA TRAMO A;${totalKmA.toFixed(2)} km\n`;
+                c += `DISTANCIA TRAMO B;${totalKmB.toFixed(2)} km\n`;
+                c += `DISTANCIA TOTAL;${(totalKmA + totalKmB).toFixed(2)} km\n`;
+                c += `DISTANCIA REGISTRADA;${(kmF - kmIn).toFixed(1)} km\n`;
 
                 const nF = `${fechaArchivo}_${est.turno}_registro.csv`;
                 const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
                 const archivo = new File([blob], nF, { type: 'text/csv' });
 
-                const supportsFileSystemAccess =
-                    'showSaveFilePicker' in window &&
-                    (() => {
-                        try {
-                            return window.self === window.top;
-                        } catch {
-                            return false;
-                        }
-                    })();
+                const supportsFileSystemAccess = 'showSaveFilePicker' in window && (() => {
+                    try { return window.self === window.top; } catch { return false; }
+                })();
 
                 if (supportsFileSystemAccess) {
                     try {
                         const handle = await window.showSaveFilePicker({
                             suggestedName: nF,
-                            types: [{ description: "CSV", accept: { "text/csv": [".csv"] } }]
+                            types: [{ description: 'CSV', accept: { 'text/csv': ['.csv'] } }]
                         });
                         const writable = await handle.createWritable();
                         await writable.write(blob);
                         await writable.close();
                         guardadoFirme = true;
-                        estado = "ok";
-                        titulo = "Exportado correctamente";
-                        mensaje = "El archivo CSV se ha guardado en la ubicación seleccionada. Puedes reiniciar la APP o volver a exportarlo si necesitas otra copia.";
+                        titulo = 'Exportado correctamente';
+                        mensaje = 'El archivo CSV se ha guardado en la ubicación seleccionada. Puedes reiniciar la APP o volver a exportarlo si necesitas otra copia.';
                     } catch (e) {
-                        if (e && e.name === "AbortError") {
-                            estado = "cancel";
-                            titulo = "Exportación cancelada";
-                            mensaje = "Has cancelado el guardado del archivo. Puedes volver a intentarlo.";
+                        if (e && e.name === 'AbortError') {
+                            titulo = 'Exportación cancelada';
+                            mensaje = 'Has cancelado el guardado del archivo. Puedes volver a intentarlo.';
                         } else {
-                            estado = "error";
-                            titulo = "Error en la exportación";
-                            mensaje = "Ocurrió un problema al guardar el archivo. Revisa la conexión o el almacenamiento y vuelve a intentarlo.";
+                            titulo = 'Error en la exportación';
+                            mensaje = 'Ocurrió un problema al guardar el archivo. Revisa la conexión o el almacenamiento y vuelve a intentarlo.';
                         }
                     }
                 } else if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
                     try {
-                        await navigator.share({
-                            files: [archivo],
-                            title: nF,
-                            text: nF
-                        });
-                        estado = "ok";
-                        titulo = "CSV enviado al sistema de compartir";
-                        mensaje = "El archivo CSV se ha enviado al sistema de compartir del dispositivo. Comprueba físicamente que se haya guardado o enviado correctamente en la aplicación o destino que hayas elegido antes de reiniciar la APP.";
+                        await navigator.share({ files: [archivo], title: nF, text: nF });
+                        titulo = 'CSV enviado al sistema de compartir';
+                        mensaje = 'El archivo CSV se ha enviado al sistema de compartir del dispositivo. Comprueba físicamente que se haya guardado o enviado correctamente antes de reiniciar la APP.';
                     } catch (err) {
-                        if (err && err.name === "AbortError") {
-                            estado = "cancel";
-                            titulo = "Exportación cancelada";
-                            mensaje = "Has cancelado la compartición del archivo. Puedes volver a intentarlo.";
+                        if (err && err.name === 'AbortError') {
+                            titulo = 'Exportación cancelada';
+                            mensaje = 'Has cancelado la compartición del archivo. Puedes volver a intentarlo.';
                         } else {
-                            estado = "error";
-                            titulo = "Error en la exportación";
-                            mensaje = "Ocurrió un problema al compartir el archivo. Prueba de nuevo o usa la descarga directa.";
+                            titulo = 'Error en la exportación';
+                            mensaje = 'Ocurrió un problema al compartir el archivo. Prueba de nuevo o usa la descarga directa.';
                         }
                     }
                 } else {
-                    const link = document.createElement("a");
+                    const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
                     link.download = nF;
                     link.click();
-                    estado = "info";
-                    titulo = "Descarga iniciada";
-                    mensaje = "Se ha iniciado la descarga del archivo CSV. Comprueba físicamente la carpeta Descargas o la ubicación configurada en tu navegador antes de reiniciar la APP.";
+                    titulo = 'Descarga iniciada';
+                    mensaje = 'Se ha iniciado la descarga del archivo CSV. Comprueba físicamente la carpeta Descargas o la ubicación configurada en tu navegador antes de reiniciar la APP.';
                 }
-
             } catch (e) {
-                estado = "error";
-                titulo = "Error inesperado";
-                mensaje = "Se ha producido un error inesperado durante la exportación. Prueba otra vez.";
+                titulo = 'Error inesperado';
+                mensaje = 'Se ha producido un error inesperado durante la exportación. Prueba otra vez.';
             } finally {
                 desbloquearUI();
                 btn.disabled = false;
-                btn.innerText = "Generar y Exportar CSV";
+                btn.innerText = 'Generar y Exportar CSV';
                 mostrarModalExport(titulo, mensaje, guardadoFirme);
             }
         }
 
         window.onload = () => {
-    if (!est || !est.f) {
-        activarModoReset();
-        return;
-    }
-
-    const faseValida = ['_pre', 0, 1, 2, 3, 4].includes(est.f);
-
-    if (!faseValida) {
-        activarModoReset();
-        return;
-    }
-
-    navegar(est.f);
-};
+            if (!est || !est.f) {
+                activarModoReset();
+                return;
+            }
+            const faseValida = ['_pre', 0, 1, 2, 3, 4].includes(est.f);
+            if (!faseValida) {
+                activarModoReset();
+                return;
+            }
+            navegar(est.f);
+        };
     </script>
 </body>
 </html>
