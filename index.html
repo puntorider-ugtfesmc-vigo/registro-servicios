@@ -376,59 +376,85 @@
         function autoFillEnt() {
     const area = document.getElementById('smart-paste-ent');
     const val = area.value.trim();
-    if (!val) return;
 
-    const lineas = val.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+    const inpId = document.getElementById('inp-id');
+    const btnFin = document.getElementById('btn-fin-ent');
 
-    const idMatch = val.match(/Pedido\s*n\s*\.?\s*(?:º|o|°)?\s*(\d{6,})/i);
-    if (!idMatch || !idMatch[1]) {
-        document.getElementById('btn-fin-ent').disabled = true;
+    if (!val) {
+        inpId.value = "";
+        btnFin.disabled = true;
+        if (est.entAct) {
+            est.entAct.partner = "";
+            est.entAct.hCliApp = null;
+        }
         return;
     }
+
+    const lineas = val
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l);
+
+    const partnerTexto = lineas[0] || "";
+
+    const idMatch = val.match(/Pedido\s*n\s*\.?\s*(?:º|o|°)?\s*(\d{6,})/i);
+
+    if (!idMatch || !idMatch[1]) {
+        inpId.value = "";
+        btnFin.disabled = true;
+        if (est.entAct) {
+            est.entAct.partner = partnerTexto;
+            est.entAct.hCliApp = null;
+        }
+        return;
+    }
+
     const newId = idMatch[1];
 
-            if (est.hist.some(p => p.idPed === newId)) {
-                alert("🛑 ¡AVISO DE SEGURIDAD!\\nPedido duplicado.");
-                area.value = "";
-                document.getElementById('inp-id').value = "";
-                document.getElementById('btn-fin-ent').disabled = true;
-                return;
-            }
-
-            const partnerTexto = lineas[0] || "";
-
-            let hCliApp = null;
-            for (const linea of lineas) {
-                const mHora = linea.match(/completado\\s+a\\s+las\\s+(\\d{1,2}:\\d{2})/i);
-                if (mHora && mHora[1]) {
-                    const [hh, mm] = mHora[1].split(":").map(Number);
-                    const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
-                    hCliApp = new Date(
-                        base.getFullYear(),
-                        base.getMonth(),
-                        base.getDate(),
-                        hh,
-                        mm,
-                        0,
-                        0
-                    );
-                    if (est.entAct && est.entAct.hLlegC) {
-                        const llegada = new Date(est.entAct.hLlegC);
-                        if (hCliApp < llegada) {
-                            hCliApp.setDate(hCliApp.getDate() + 1);
-                        }
-                    }
-                    break;
-                }
-            }
-
-            document.getElementById('inp-id').value = newId;
-            document.getElementById('btn-fin-ent').disabled = false;
-
-            if (!est.entAct) est.entAct = {};
-            est.entAct.partner = partnerTexto;
-            est.entAct.hCliApp = hCliApp;
+    if (est.hist.some(p => p.idPed === newId)) {
+        alert("🛑 ¡AVISO DE SEGURIDAD!\nPedido duplicado.");
+        area.value = "";
+        inpId.value = "";
+        btnFin.disabled = true;
+        if (est.entAct) {
+            est.entAct.partner = "";
+            est.entAct.hCliApp = null;
         }
+        return;
+    }
+
+    let hCliApp = null;
+    const horaMatch = val.match(/completado\s+a\s+las\s+(\d{1,2}:\d{2})/i);
+
+    if (horaMatch && horaMatch[1]) {
+        const [hh, mm] = horaMatch[1].split(":").map(Number);
+        const base = est.entAct && est.entAct.hLlegC ? new Date(est.entAct.hLlegC) : new Date();
+
+        hCliApp = new Date(
+            base.getFullYear(),
+            base.getMonth(),
+            base.getDate(),
+            hh,
+            mm,
+            0,
+            0
+        );
+
+        if (est.entAct && est.entAct.hLlegC) {
+            const llegada = new Date(est.entAct.hLlegC);
+            if (hCliApp < llegada) {
+                hCliApp.setDate(hCliApp.getDate() + 1);
+            }
+        }
+    }
+
+    inpId.value = newId;
+    btnFin.disabled = false;
+
+    if (!est.entAct) est.entAct = {};
+    est.entAct.partner = partnerTexto;
+    est.entAct.hCliApp = hCliApp;
+}
 
         // NAVEGACIÓN Y ESTADO
         function navegar(fase, bypassReset = false) {
