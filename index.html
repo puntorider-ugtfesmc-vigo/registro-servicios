@@ -44,7 +44,6 @@
 }
 
 #p_pre {
-    min-height: calc(100vh - 50px);
     display: flex !important;
     flex-direction: column;
     justify-content: center;
@@ -53,7 +52,7 @@
     background: #000;
     color: #ff0000;
     padding: 24px;
-    margin: -25px;
+    margin: 0;
 }
 
 #p_pre h1 {
@@ -420,6 +419,12 @@ body.fase-pre #p0 {
             document.getElementById('undo-wrapper').classList.toggle('hidden', standBy);
             document.getElementById('global-log-wrapper').classList.toggle('hidden', standBy);
             est.f = fase;
+            const body = document.body;
+            if (fase === '_pre') {
+                body.classList.add('fase-pre');
+                } else {
+                body.classList.remove('fase-pre');
+                }
             if (fase === 1) renderMenu();
             if (fase === 2 && est.hUlt) startCron('cron-local', est.hUlt);
             if (fase === 3 && est.entAct) startCron('cron-cli', est.entAct.hLlegC);
