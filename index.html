@@ -374,18 +374,18 @@
         }
 
         function autoFillEnt() {
-            const area = document.getElementById('smart-paste-ent');
-            const val = area.value.trim();
-            if (!val) return;
+    const area = document.getElementById('smart-paste-ent');
+    const val = area.value.trim();
+    if (!val) return;
 
-            const lineas = val.split(/\\r?\\n/).map(l => l.trim()).filter(l => l);
+    const lineas = val.split(/\r?\n/).map(l => l.trim()).filter(l => l);
 
-            const idMatch = val.match(/Pedido\\s+n\\s*\\.?\\s*º\\s*(\\d+)/i);
-            if (!idMatch || !idMatch[1]) {
-                document.getElementById('btn-fin-ent').disabled = true;
-                return;
-            }
-            const newId = idMatch[1];
+    const idMatch = val.match(/Pedido\s*n\s*\.?\s*(?:º|o|°)?\s*(\d{6,})/i);
+    if (!idMatch || !idMatch[1]) {
+        document.getElementById('btn-fin-ent').disabled = true;
+        return;
+    }
+    const newId = idMatch[1];
 
             if (est.hist.some(p => p.idPed === newId)) {
                 alert("🛑 ¡AVISO DE SEGURIDAD!\\nPedido duplicado.");
