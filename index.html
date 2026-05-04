@@ -643,7 +643,7 @@
             if (aviso) {
                 if (invalido) {
                     aviso.className = "alert alert-danger py-3 small border-0 rounded-3 mb-4";
-                    aviso.innerHTML = `<strong>⚠️ Revisión necesaria:</strong> MIRA LA ALERTA, El KM inicial registrado fue <strong>${est.kmI}</strong>. El KM final debe ser igual o superior para exportar. Si el error estuvo al inicio, corrige manualmente el valor final usando esa referencia.`;
+                    aviso.innerHTML = `<strong>⚠️ Revisión necesaria:</strong> WARNING, El KM inicial registrado fue <strong>${est.kmI}</strong>. El KM final debe ser igual o superior para exportar. Si el error estuvo al inicio, corrige manualmente el valor final usando esa referencia.`;
                 } else {
                     aviso.className = "alert alert-warning py-3 small border-0 rounded-3 mb-4";
                     aviso.innerHTML = `<strong>⚠️ Verificación de KM:</strong> El KM inicial registrado fue <strong>${est.kmI}</strong>. Revisa que el valor final sea coherente antes de exportar.`;
