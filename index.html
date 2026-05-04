@@ -38,30 +38,48 @@
         #export-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 10000; }
         #export-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10001; }
         #export-modal .card { max-width: 420px; width: 90%; }
-        /* Microcirugía visual: pantalla inicial negro + rojo brillante */
+        /* Pantalla inicial fullscreen negro/rojo */
+.app-container {
+    background: #000;
+}
+
 #p_pre {
+    min-height: calc(100vh - 50px);
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     background: #000;
     color: #ff0000;
-    border-radius: 18px;
-    padding: 28px 18px;
+    padding: 24px;
+    margin: -25px;
 }
 
 #p_pre h1 {
     color: #ff0000;
-    text-shadow: 0 0 10px rgba(255, 0, 0, 0.35);
+    text-shadow: 0 0 14px rgba(255, 0, 0, 0.45);
+    margin-top: 8px;
 }
 
-#p_pre img {
-    background: #000;
-    border-radius: 16px;
-    padding: 10px;
-    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.35));
+#p_pre .mb-4 img {
+    display: none;
+}
+
+#p_pre .mb-4::before {
+    content: "🛵";
+    display: block;
+    font-size: 5rem;
+    line-height: 1;
+    color: #ff0000;
+    text-shadow: 0 0 16px rgba(255, 0, 0, 0.55);
 }
 
 #p_pre .btn.btn-primary {
     background: #0d6efd;
     border-color: #0d6efd;
     color: #fff;
+    font-weight: 800;
 }
 
 #p_pre .btn.btn-primary:hover,
