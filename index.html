@@ -223,7 +223,6 @@
 let ultimoGuardadoFirme = false;
 const fixT = () => new Date();
 const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
-
         function bloquearUI(texto = "Procesando...") {
             const lock = document.getElementById('ui-lock');
             if (!lock) return;
@@ -238,17 +237,32 @@ const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minu
             lock.classList.add('hidden');
         }
 
-        function mostrarModalExport(titulo, mensaje, permitirReset = false) {
-    const bd = document.getElementById('export-modal-backdrop');
-    const md = document.getElementById('export-modal');
+        function reiniciarTrasExport() {
+    if (ultimoGuardadoFirme) {
+        cerrarModalExport();
+        bloquearUI("Reiniciando APP...");
+        setTimeout(() => {
+            activarModoReset();
+            desbloquearUI();
+        }, 250);
+        return;
+    }
 
-    ultimoGuardadoFirme = permitirReset;
+    const confirmado = confirm(
+        "⚠️ ATENCIÓN ANTES DE REINICIAR\n\n" +
+        "El sistema no ha podido confirmar físicamente que el CSV exista en el destino final.\n" +
+        "Antes de reiniciar, comprueba manualmente el archivo.\n\n" +
+        "¿Deseas reiniciar igualmente?"
+    );
 
-    document.getElementById('export-modal-title').innerText = titulo;
-    document.getElementById('export-modal-msg').innerText = mensaje;
+    if (!confirmado) return;
 
-    bd.classList.remove('hidden');
-    md.classList.remove('hidden');
+    cerrarModalExport();
+    bloquearUI("Reiniciando APP...");
+    setTimeout(() => {
+        activarModoReset();
+        desbloquearUI();
+    }, 250);
 }
 
         function cerrarModalExport() {
