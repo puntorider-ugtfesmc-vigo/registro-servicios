@@ -38,6 +38,38 @@
         #export-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 10000; }
         #export-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10001; }
         #export-modal .card { max-width: 420px; width: 90%; }
+        /* Microcirugía visual: pantalla inicial negro + rojo brillante */
+#p_pre {
+    background: #000;
+    color: #ff0000;
+    border-radius: 18px;
+    padding: 28px 18px;
+}
+
+#p_pre h1 {
+    color: #ff0000;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.35);
+}
+
+#p_pre img {
+    background: #000;
+    border-radius: 16px;
+    padding: 10px;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.35));
+}
+
+#p_pre .btn.btn-primary {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+#p_pre .btn.btn-primary:hover,
+#p_pre .btn.btn-primary:focus {
+    background: #0b5ed7;
+    border-color: #0a58ca;
+    color: #fff;
+}
     </style>
 </head>
 <body>
@@ -173,6 +205,7 @@
 
         const fixT = () => new Date();
         const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '';
+        const fmtKm = (n) => new Intl.NumberFormat('es-ES', {minimumFractionDigits: 3, maximumFractionDigits: 3}).format(Number(n || 0));
 
         function bloquearUI(texto = "Procesando...") {
             const lock = document.getElementById('ui-lock');
@@ -630,6 +663,20 @@
             }
         }
 
+        function generarLinkMaps(p) {
+                const tieneOrigen = p.coordAsig && p.coordAsig.lat != null && p.coordAsig.lng != null;
+                const tienePartner = p.coordRec && p.coordRec.lat != null && p.coordRec.lng != null;
+                const tieneDestino = p.coordLlegC && p.coordLlegC.lat != null && p.coordLlegC.lng != null;
+
+    if (!tieneOrigen || !tienePartner || !tieneDestino) return '';
+
+                const origin = `${p.coordAsig.lat},${p.coordAsig.lng}`;
+                const waypoint = `${p.coordRec.lat},${p.coordRec.lng}`;
+                const destination = `${p.coordLlegC.lat},${p.coordLlegC.lng}`;
+
+    return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=driving&waypoints=${encodeURIComponent(waypoint)}`;
+}
+
         async function exportarCSV() {
             const btn = document.getElementById('btnExportar');
             btn.disabled = true;
@@ -689,7 +736,7 @@
                 c += `Inicio;${fmtH(est.hIni)};Fin;${fmtH(hF)};Duracion;${dTurno.reloj};U_Turno;${horasTurno.toFixed(2)}\n`;
                 c += `KM_INI;${est.kmI};KM_FIN;${kmF};KM_TOTAL_REG;${(kmF - kmIn).toFixed(1)}\n`;
                 c += `\n`;
-                c += 'ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED\n';
+                c += 'ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED;MAPS\n';
 
                 for (let i = 0; i < est.hist.length; i++) {
                     const p = est.hist[i];
@@ -725,7 +772,7 @@
                     totalExcV += (p.excV || 0);
 
                     c += [
-                        p.idPed || '',
+                        `="${String(p.idPed || '')}"`,
                         p.cliente || '',
                         p.partner || 'Pdte...',
                         fmtH(p.hAsig),
@@ -735,7 +782,7 @@
                         tA.reloj,
                         tA.decimal,
                         rutaA.tipo,
-                        rutaA.km,
+                        fmtKm(rutaA.km),
                         fmtH(p.hRec),
                         tEL.reloj,
                         tEL.decimal,
@@ -746,14 +793,15 @@
                         tB.reloj,
                         tB.decimal,
                         rutaB.tipo,
-                        rutaB.km,
+                        fmtKm(rutaB.km),
                         p.hCliApp ? fmtH(p.hCliApp) : '',
                         fmtH(p.hFin),
                         tEC.reloj,
                         tEC.decimal,
                         tTot.reloj,
                         tTot.decimal,
-                        kmTotPed
+                        fmtKm(kmTotPed)
+                        generarLinkMaps(p)
                     ].join(';') + '\n';
                 }
 
@@ -763,10 +811,10 @@
                 c += `DIRECCIONES;${contadorRecogidasUnicas + est.hist.length}\n`;
                 c += `Pedidos/Hora;${horasTurno > 0 ? (est.hist.length / horasTurno).toFixed(2) : '0.00'}\n`;
                 c += `TOTAL EXCESOS;${totalExcP + totalExcV};(Peso: ${totalExcP} / Vol: ${totalExcV})\n`;
-                c += `DISTANCIA TRAMO A;${totalKmA.toFixed(2)} km\n`;
-                c += `DISTANCIA TRAMO B;${totalKmB.toFixed(2)} km\n`;
-                c += `DISTANCIA TOTAL;${(totalKmA + totalKmB).toFixed(2)} km\n`;
-                c += `DISTANCIA REGISTRADA;${(kmF - kmIn).toFixed(1)} km\n`;
+                c += `DISTANCIA TRAMO A;${fmtKm(totalKmA)} km\n`;
+                c += `DISTANCIA TRAMO B;${fmtKm(totalKmB)} km\n`;
+                c += `DISTANCIA TOTAL;${fmtKm(totalKmA + totalKmB)} km\n`;
+                c += `DISTANCIA REGISTRADA;${fmtKm(kmF - kmIn)} km\n`;
 
                 const nF = `${fechaArchivo}_${est.turno}_registro.csv`;
                 const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
