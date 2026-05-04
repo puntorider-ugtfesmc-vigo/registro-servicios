@@ -9,7 +9,7 @@
         :root { --primary: #2c3e50; --accent: #27ae60; --warning: #f39c12; --info: #3498db; --secondary: #95a5a6; --danger-soft: #e74c3c; --light-bg: #f0f2f5; --white: #ffffff; }
         html, body { height: 100%; margin: 0; }
         body { background-color: var(--light-bg); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--primary); }
-        .app-container { max-width: 500px; margin: auto; min-height: 100%; display: flex; flex-direction: column; background: var(--white); padding: 25px; box-shadow: 0 0 30px rgba(0,0,0,0.1); position: relative; }
+        .app-container { max-width: 500px; margin: auto; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; background: var(--white); padding: 18px; box-shadow: 0 0 30px rgba(0,0,0,0.1); position: relative; }
         .btn-massive { padding: 22px; font-size: 1.25rem; font-weight: 800; border-radius: 18px; margin-bottom: 20px; width: 100%; text-transform: uppercase; border: none; transition: transform 0.1s ease, box-shadow 0.2s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .btn-massive:active { transform: scale(0.94); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn-massive:disabled { background-color: #dcdde1 !important; color: #7f8c8d !important; box-shadow: none; cursor: not-allowed; }
@@ -38,6 +38,22 @@
         #export-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 10000; }
         #export-modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10001; }
         #export-modal .card { max-width: 420px; width: 90%; }
+        #p0, #p1, #p2, #p3, #p4 {flex: 1;}
+        #p0 .card,
+        #p2 .card,
+        #p3 .card,
+        #p4 .card {border-radius: 18px;}
+        #p0 h2,
+        #p2 h4,
+        #p3 h4,
+        #p4 h3 {margin-bottom: 18px !important;}
+
+        #p0 {display: flex; flex-direction: column; justify-content: center;}
+        #p0 .card {padding: 20px !important;}
+        #p0 .mb-4 {margin-bottom: 18px !important;}
+        #p0 .form-control-lg {padding-top: 0.85rem !important; padding-bottom: 0.85rem !important; }
+        #p0 .btn-massive {margin-bottom: 0; padding: 18px; }
+        
         /* Pantalla inicial fullscreen negro/rojo */
 .app-container {
     background: #000;
