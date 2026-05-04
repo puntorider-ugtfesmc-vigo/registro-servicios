@@ -88,6 +88,24 @@
     border-color: #0a58ca;
     color: #fff;
 }
+        /* Estado especial solo cuando estamos en la fase _pre (pantalla inicial) */
+body.fase-pre {
+    background-color: #000000;
+}
+
+body.fase-pre .app-container {
+    background: #000000;
+    box-shadow: none;
+}
+
+body.fase-pre #p_pre {
+    min-height: 100vh;
+    margin: 0;
+}
+
+body.fase-pre #p0 {
+    display: none !important;
+}
     </style>
 </head>
 <body>
