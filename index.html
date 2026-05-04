@@ -982,9 +982,21 @@
             }
         }
 
-        window.onload = () => { 
-            if(est.f !== '_pre') navegar(est.f); 
-        };
+        window.onload = () => {
+    if (!est || !est.f) {
+        activarModoReset();
+        return;
+    }
+
+    const faseValida = ['_pre', 0, 1, 2, 3, 4].includes(est.f);
+
+    if (!faseValida) {
+        activarModoReset();
+        return;
+    }
+
+    navegar(est.f);
+};
     </script>
 </body>
 </html>
