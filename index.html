@@ -179,7 +179,7 @@
                 <button id="btnExportar" onclick="exportarCSV()" class="btn btn-massive btn-primary shadow-lg mb-4">Generar y Exportar CSV</button>
 
                 <div id="msg-seguridad" class="alert alert-secondary py-3 small m-0 border-0 rounded-3">
-                    <p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> El sistema solo permitirá el borrado tras detectar una exportación exitosa.</p>
+                    <p class="mb-0"><strong>🛡️ REGLA DE ORO:</strong> Reinicia solo después de comprobar que el CSV se ha guardado correctamente. Si el sistema no puede confirmarlo, te pedirá validación antes de borrar.</p>
                 </div>
             </div>
             <button onclick="navegar(1)" class="btn btn-link text-muted fw-bold text-decoration-none">Volver a la mochila</button>
@@ -220,9 +220,9 @@
         let est = JSON.parse(localStorage.getItem('auditor_v7.3')) || { f:'_pre', hIni:null, kmI:0, turno:'01', hAsig:null, hUlt:null, bandeja:[], hist:[], logHitos:[] };
         let pilaUndo = JSON.parse(localStorage.getItem('pila_undo_v7.3')) || [];
         let timer;
-let ultimoGuardadoFirme = false;
-const fixT = () => new Date();
-const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
+        let ultimoGuardadoFirme = false;
+        const fixT = () => new Date();
+        const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '---';
         function bloquearUI(texto = "Procesando...") {
             const lock = document.getElementById('ui-lock');
             if (!lock) return;
@@ -237,7 +237,7 @@ const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minu
             lock.classList.add('hidden');
         }
 
-        function reiniciarTrasExport() {
+       function reiniciarTrasExport() {
     if (ultimoGuardadoFirme) {
         cerrarModalExport();
         bloquearUI("Reiniciando APP...");
@@ -265,37 +265,23 @@ const fmtH = (d) => d ? new Date(d).toLocaleTimeString([], {hour:'2-digit', minu
     }, 250);
 }
 
+   
         function cerrarModalExport() {
             document.getElementById('export-modal-backdrop').classList.add('hidden');
             document.getElementById('export-modal').classList.add('hidden');
         }
 
-        function reiniciarTrasExport() {
-    if (ultimoGuardadoFirme) {
-        cerrarModalExport();
-        bloquearUI("Reiniciando APP...");
-        setTimeout(() => {
-            activarModoReset();
-            desbloquearUI();
-        }, 250);
-        return;
-    }
+        function mostrarModalExport(titulo, mensaje, permitirReset = false) {
+    const bd = document.getElementById('export-modal-backdrop');
+    const md = document.getElementById('export-modal');
 
-    const confirmado = confirm(
-        "⚠️ ATENCIÓN ANTES DE REINICIAR\n\n" +
-        "El sistema no ha podido confirmar físicamente que el CSV exista en el destino final.\n" +
-        "Antes de reiniciar, comprueba manualmente el archivo.\n\n" +
-        "¿Deseas reiniciar igualmente?"
-    );
+    ultimoGuardadoFirme = permitirReset;
 
-    if (!confirmado) return;
+    document.getElementById('export-modal-title').innerText = titulo;
+    document.getElementById('export-modal-msg').innerText = mensaje;
 
-    cerrarModalExport();
-    bloquearUI("Reiniciando APP...");
-    setTimeout(() => {
-        activarModoReset();
-        desbloquearUI();
-    }, 250);
+    bd.classList.remove('hidden');
+    md.classList.remove('hidden');
 }
 
         const obtenerGPS = () => {
