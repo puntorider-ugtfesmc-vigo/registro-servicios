@@ -747,7 +747,6 @@ body.fase-pre #p0 {
     try {
         const hF = fixT();
         const hIniDate = new Date(est.hIni);
-        const fechaHoy = hIniDate.toLocaleDateString();
         const y = hIniDate.getFullYear();
         const m = String(hIniDate.getMonth() + 1).padStart(2, '0');
         const d = String(hIniDate.getDate()).padStart(2, '0');
@@ -813,15 +812,50 @@ body.fase-pre #p0 {
         // ==========================
         c += `REGISTRO DE PEDIDOS\n`;
         c += `Descripción;Cada fila representa un pedido del turno\n`;
-        c += 'ID;CLIENTE;PARTNER;H.ASIG;COORD_ASIG;H.LLEG.LOCAL;COORD_RECOG;T_TRAMO_A;MIN_A;RUTA_A;KM_A;H.RECOGIDA;T_ESPERA_L(Adj);MIN_ESP_L;EXC_PESO;EXC_VOL;H.LLEG.CLIENTE;COORD_DEST;T_TRAMO_B;MIN_B;RUTA_B;KM_B;H.CLI.APP;H.FIN;T_ESPERA_C(Adj);MIN_ESP_C;T_TOTAL_PED;MIN_TOTAL_PED;KM_TOTAL_PED;MAPS\n';
+        c += [
+            'FECHA',
+            'ID',
+            'PARTNER',
+            'H.ASIG',
+            'COORD_ASIG',
+            'H.LLEG.LOCAL',
+            'COORD_RECOG',
+            'T_TRAMO_A',
+            'MIN_A',
+            'RUTA_A',
+            'KM_A',
+            'H.RECOGIDA',
+            'T_ESPERA_L(Adj)',
+            'MIN_ESP_L',
+            'EXC_PESO',
+            'EXC_VOL',
+            'H.LLEG.CLIENTE',
+            'ENTREGA',
+            'COORD_DEST',
+            'T_TRAMO_B',
+            'MIN_B',
+            'RUTA_B',
+            'KM_B',
+            'H.CLI.APP',
+            'H.FIN',
+            'T_ESPERA_C(Adj)',
+            'MIN_ESP_C',
+            'T_TOTAL_PED',
+            'MIN_TOTAL_PED',
+            'KM_TOTAL_PED',
+            'MAPS',
+            'OBS_RECOG',
+            'OBS_ENT'
+        ].join(';') + '\n';
 
         for (let i = 0; i < est.hist.length; i++) {
             const p = est.hist[i];
-            const tA = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
-            const tEL = calcularMetricasTiempo(new Date(p.hRec) - new Date(p.hLlegL), 5);
-            const tB = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
-            const tEC = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hLlegC), 5);
-            const tTot = calcularMetricasTiempo(new Date(p.hFin) - new Date(p.hAsig));
+
+            const tA  = calcularMetricasTiempo(new Date(p.hLlegL) - new Date(p.hAsig));
+            const tEL = calcularMetricasTiempo(new Date(p.hRec)    - new Date(p.hLlegL), 5);
+            const tB  = calcularMetricasTiempo(new Date(p.hLlegC) - new Date(p.hRec));
+            const tEC = calcularMetricasTiempo(new Date(p.hFin)    - new Date(p.hLlegC), 5);
+            const tTot = calcularMetricasTiempo(new Date(p.hFin)   - new Date(p.hAsig));
 
             if (p.hRec !== ultHRec) {
                 contadorRecogidasUnicas++;
@@ -839,28 +873,27 @@ body.fase-pre #p0 {
             let rutaBBruto = await obtenerDistanciaRuta(origenB, p.coordLlegC || {});
             const rutaA = normalizarRuta(rutaABruto);
             const rutaB = normalizarRuta(rutaBBruto);
+
             const kmA = parseFloat(rutaA.km || 0);
             const kmB = parseFloat(rutaB.km || 0);
             const kmTotPed = (kmA + kmB).toFixed(2);
 
-            // tiempos y esperas en minutos (decimales)
-            const minA = parseFloat(tA.decimal || 0);
-            const minB = parseFloat(tB.decimal || 0);
+            const minA    = parseFloat(tA.decimal  || 0);
+            const minB    = parseFloat(tB.decimal  || 0);
             const minEspL = parseFloat(tEL.decimal || 0);
             const minEspC = parseFloat(tEC.decimal || 0);
 
-            totalKmA += kmA;
-            totalKmB += kmB;
-            totalMinEspLAdj += minEspL;
-            totalMinEspCAdj += minEspC;
-            totalMinPed += parseFloat(tTot.decimal || 0);
-            totalExcP += (p.excP || 0);
-            totalExcV += (p.excV || 0);
+            totalKmA         += kmA;
+            totalKmB         += kmB;
+            totalMinEspLAdj  += minEspL;
+            totalMinEspCAdj  += minEspC;
+            totalMinPed      += parseFloat(tTot.decimal || 0);
+            totalExcP        += (p.excP || 0);
+            totalExcV        += (p.excV || 0);
 
-            // filtro depurado
             const entraDepurado =
-                kmA <= 10 &&
-                kmB <= 10 &&
+                kmA    <= 10 &&
+                kmB    <= 10 &&
                 minEspL <= 10 &&
                 minEspC <= 10;
 
@@ -868,41 +901,44 @@ body.fase-pre #p0 {
                 depCount++;
                 depSumMinA += minA;
                 depSumMinB += minB;
-                depSumKmA += kmA;
-                depSumKmB += kmB;
+                depSumKmA  += kmA;
+                depSumKmB  += kmB;
             }
 
             c += [
-                `="${String(p.idPed || '')}"`,
-                p.cliente || '',
-                p.partner || 'Pdte...',
-                fmtH(p.hAsig),
-                fmtCoord(p.coordAsig),
-                fmtH(p.hLlegL),
-                fmtCoord(p.coordRec),
-                tA.reloj,
-                tA.decimal,
-                rutaA.tipo,
-                fmtKm(rutaA.km),
-                fmtH(p.hRec),
-                tEL.reloj,
-                tEL.decimal,
-                (p.excP || 0),
-                (p.excV || 0),
-                fmtH(p.hLlegC),
-                fmtCoord(p.coordLlegC),
-                tB.reloj,
-                tB.decimal,
-                rutaB.tipo,
-                fmtKm(rutaB.km),
-                p.hCliApp ? fmtH(p.hCliApp) : '',
-                fmtH(p.hFin),
-                tEC.reloj,
-                tEC.decimal,
-                tTot.reloj,
-                tTot.decimal,
-                fmtKm(kmTotPed),
-                generarLinkMaps(p)
+                fechaArchivo,                            // FECHA
+                `"=${String(p.idPed || '')}"`,           // ID (texto en Excel)
+                p.partner || 'Pdte...',                  // PARTNER
+                fmtH(p.hAsig),                           // H.ASIG
+                fmtCoord(p.coordAsig),                   // COORD_ASIG
+                fmtH(p.hLlegL),                          // H.LLEG.LOCAL
+                fmtCoord(p.coordRec),                    // COORD_RECOG
+                tA.reloj,                                // T_TRAMO_A
+                tA.decimal,                              // MIN_A
+                rutaA.tipo,                              // RUTA_A
+                fmtKm(rutaA.km),                         // KM_A
+                fmtH(p.hRec),                            // H.RECOGIDA
+                tEL.reloj,                               // T_ESPERA_L(Adj)
+                tEL.decimal,                             // MIN_ESP_L
+                (p.excP || 0),                           // EXC_PESO
+                (p.excV || 0),                           // EXC_VOL
+                fmtH(p.hLlegC),                          // H.LLEG.CLIENTE
+                p.cliente || '',                         // ENTREGA (1/1, 1/2, 2/2...)
+                fmtCoord(p.coordLlegC),                  // COORD_DEST
+                tB.reloj,                                // T_TRAMO_B
+                tB.decimal,                              // MIN_B
+                rutaB.tipo,                              // RUTA_B
+                fmtKm(rutaB.km),                         // KM_B
+                p.hCliApp ? fmtH(p.hCliApp) : '',        // H.CLI.APP
+                fmtH(p.hFin),                            // H.FIN
+                tEC.reloj,                               // T_ESPERA_C(Adj)
+                tEC.decimal,                             // MIN_ESP_C
+                tTot.reloj,                              // T_TOTAL_PED
+                tTot.decimal,                            // MIN_TOTAL_PED
+                fmtKm(kmTotPed),                         // KM_TOTAL_PED
+                generarLinkMaps(p),                      // MAPS
+                p.obsRec || '',                          // OBS_RECOG
+                p.obsEnt || ''                           // OBS_ENT
             ].join(';') + '\n';
         }
 
@@ -918,12 +954,22 @@ body.fase-pre #p0 {
         c += `Distancia total estimada;${fmtKm(totalKmA + totalKmB)} km;;KM registrados odómetro;${fmtKm(kmF - kmIn)} km\n`;
         c += `\n`;
 
+        // ==========================
         // RESUMEN OPERATIVO DEPURADO
+        // ==========================
+        const mediaT  = depCount ? ((depSumMinA + depSumMinB) / depCount).toFixed(2) : '0.00';
+        const mediaKm = depCount ? fmtKm((depSumKmA + depSumKmB) / depCount) : '0,00';
+
         c += `RESUMEN OPERATIVO DEPURADO\n`;
         c += `Pedidos válidos análisis;${depCount} de ${est.hist.length};;Criterio;Sin tramos > 10 km ni esperas > 10 min\n`;
         c += `Media MIN_A (válidos);${depCount ? (depSumMinA / depCount).toFixed(2) : '0.00'};;Media MIN_B (válidos);${depCount ? (depSumMinB / depCount).toFixed(2) : '0.00'}\n`;
         c += `Media KM_A (válidos);${depCount ? fmtKm(depSumKmA / depCount) : '0,00'} km;;Media KM_B (válidos);${depCount ? fmtKm(depSumKmB / depCount) : '0,00'} km\n`;
+        c += `Media_T (min válidos);${mediaT}\n`;
+        c += `Media_Km (km válidos);${mediaKm}\n`;
 
+        // ==========================
+        // GENERACIÓN Y GUARDADO
+        // ==========================
         const nF = `${fechaArchivo}_${est.turno}_registro.csv`;
         const blob = new Blob([c], { type: 'text/csv;charset=utf-8;' });
         const archivo = new File([blob], nF, { type: 'text/csv' });
